@@ -81,7 +81,7 @@ def get_trade_data_by_day(ak, date='', code_list=[]):
             # 记录获取失败的股票
             failed_list.append(code)
             print(f"\n获取股票 {code} 的分钟数据失败: {e}")
-            time.sleep(5) # 失败时可以暂停更长时间
+            time.sleep(1) # 失败时可以暂停更长时间
             
     if len(failed_list) > 0:
         json_save(f'./message/failed_list_{date}.json', failed_list)
