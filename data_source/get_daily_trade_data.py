@@ -92,6 +92,7 @@ def get_trade_data_by_day(ak, date='', code_list=[]):
 
 def get_daily_trade_data(ak, date, path='./dataset'):
     if TRADE_DATE.get(date) is not None:
+        print(f'Start Get Trade Data By Day: {date} ')
         all_minute_df = get_trade_data_by_day(ak, date)
         concat_trade_data(all_minute_df, date, path=path)
     else:
