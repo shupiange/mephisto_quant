@@ -1,2 +1,4 @@
 nohup.out
 params/stock_code_list_bak.json
+dataset/*
+message/*

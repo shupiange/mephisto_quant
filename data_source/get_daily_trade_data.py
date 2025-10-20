@@ -4,6 +4,7 @@ import akshare as ak
 import datetime
 import time
 import argparse
+import pytz
 
 from tqdm import tqdm
 
@@ -62,7 +63,7 @@ def get_trade_data_by_day(ak, date='', code_list=[]):
             # 获取该股票的分钟数据
             df_minute = ak.stock_zh_a_hist_min_em(
                 symbol=code, 
-                period='1', 
+                period='5', 
                 start_date=pattern_date_start,
                 end_date=pattern_date_end,
                 adjust="hfq" # 可以选择 "qfq" (前复权), "hfq" (后复权) 或 "" (不复权)
@@ -81,7 +82,7 @@ def get_trade_data_by_day(ak, date='', code_list=[]):
             # 记录获取失败的股票
             failed_list.append(code)
             print(f"\n获取股票 {code} 的分钟数据失败: {e}")
-            time.sleep(1) # 失败时可以暂停更长时间
+            time.sleep(5) # 失败时可以暂停更长时间
             
     if len(failed_list) > 0:
         json_save(f'./message/failed_list_{date}.json', failed_list)
@@ -104,7 +105,7 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
 
-    date = datetime.date.today().strftime('%Y-%m-%d')
+    date = datetime.datetime.now(pytz.timezone('Asia/Shanghai')).strftime('%Y-%m-%d')
     if args.date != '':
         date = args.date
     
