@@ -1,3 +1,6 @@
 nohup.out
 dataset/*
 message/*
+params/stock_code_list_bak.json
+params/stock_code_list.json
+params/trade_date.json
