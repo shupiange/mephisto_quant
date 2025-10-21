@@ -19,7 +19,6 @@ parser.add_argument('--date', type=str, default='', required=False)
 
 TRADE_DATE = get_trade_date()
 
-
 def concat_trade_data(all_minute_data, date, path='./dataset'):
     
     df_list = []
@@ -36,7 +35,7 @@ def concat_trade_data(all_minute_data, date, path='./dataset'):
 
         start_date, end_date = date[0], date[1]
         for code, code_df in all_minute_data.items():
-            code_df.loc[:, 'time_rank'] = code_df.groupby('code')['time'].rank()
+            code_df.loc[:, 'time_rank'] = code_df.groupby(['code', 'date'])['time'].rank()
             df_list.append(code_df)
             code_df.to_csv(f'{path}/trade_minute_{code}_{start_date}-{end_date}.csv', index=False)
 
