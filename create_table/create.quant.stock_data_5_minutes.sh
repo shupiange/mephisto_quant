@@ -10,7 +10,7 @@ echo "开始创建数据库和表..."
 
 # SQL命令
 SQL_COMMAND="
-CREATE TABLE stock_data (
+CREATE TABLE quant.stock_data (
     -- 主键
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
 
