@@ -31,6 +31,8 @@ if __name__ == '__main__':
     if date == datetime.datetime.now(pytz.timezone('Asia/Shanghai')).strftime('%Y-%m-%d'):
         update_all_params(ak, path='./params')
 
+    lg = bs.login()
+    
     if date == '' and start_date == '' and end_date == '':
         current_date = datetime.date.today().strftime('%Y-%m-%d')
         get_daily_trade_data(bs, current_date, data_path)
@@ -45,3 +47,5 @@ if __name__ == '__main__':
             current_date_str = current_date.strftime('%Y-%m-%d')
             get_daily_trade_data(bs, current_date_str, data_path)
             current_date += delta
+            
+    bs.logout()
