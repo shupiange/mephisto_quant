@@ -1,6 +1,6 @@
 from utils.utils import json_load
 
-
+import re
 
 def transform_code_name(stock_code: str) -> str:
     """
@@ -36,6 +36,7 @@ def transform_code_name(stock_code: str) -> str:
 
     # 返回带前缀的 BaoStock 代码
     return prefix + code
+
 
 
 

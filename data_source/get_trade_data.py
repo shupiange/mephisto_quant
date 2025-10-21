@@ -8,8 +8,8 @@ import pytz
 
 from tqdm import tqdm
 
-from utils.utils import json_load, json_save
-from utils.trade_utils import transform_code_name
+from utils.utils import json_save
+from utils.trade_utils import transform_code_name, transform_code
 from params.get_params import get_stock_code_list, get_trade_date
 
 import argparse
