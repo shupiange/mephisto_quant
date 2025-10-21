@@ -100,7 +100,7 @@ def get_daily_trade_data(bs, date, path='./dataset'):
 
 def get_range_trade_data(bs, start_date, end_date, path='./dataset'):
     print(f'Start Get Trade Data By Range: {start_date} - {end_date} ')
-    all_minute_df = get_trade_minutes_data(bs, start_date, end_date, request_interval=1)
+    all_minute_df = get_trade_minutes_data(bs, start_date, end_date, request_interval=1, code_list=['600519','000001','300750','688981'])
     concat_trade_data(all_minute_df, [start_date, end_date], path=path)
     return
 
