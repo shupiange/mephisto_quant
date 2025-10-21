@@ -36,8 +36,10 @@ if __name__ == '__main__':
     if date == '' and start_date == '' and end_date == '':
         current_date = datetime.date.today().strftime('%Y-%m-%d')
         get_daily_trade_data(bs, current_date, data_path)
+        
     elif date != '':
         get_daily_trade_data(bs, date, data_path)
+        
     elif start_date != '' and end_date != '':
         start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d').date()
         end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
