@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import akshare as ak
+import baostock as bs
 import datetime
 import time
 import argparse
@@ -9,9 +9,8 @@ import pytz
 from tqdm import tqdm
 
 from utils.utils import json_load, json_save
-from utils.trade_utils import get_trade_date
-
-from params.get_params import get_stock_code_list
+from utils.trade_utils import transform_code_name
+from params.get_params import get_stock_code_list, get_trade_date
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -22,13 +21,11 @@ TRADE_DATE = get_trade_date()
 
 
 def concat_trade_data(all_minute_data, date, path='./dataset', source_path='./params'):
-    
-    dictionary = json_load(f'{source_path}/dictionary.json')
-    
+        
     df_list = []
     for code, code_df in all_minute_data.items():
-        code_df.loc[:, 'time_rank'] = code_df['时间'].rank()
-        df_list.append(code_df.rename(columns=dictionary))
+        code_df.loc[:, 'time_rank'] = code_df['time'].rank()
+        df_list.append(code_df)
         
     total_df = pd.concat(df_list, axis=0)
     total_df.to_csv(f'{path}/trade_minute_{date}.csv', index=False)
@@ -36,19 +33,11 @@ def concat_trade_data(all_minute_data, date, path='./dataset', source_path='./pa
     return
 
 
-def get_trade_data_by_day(ak, date='', code_list=[]):
-
-    # date = '2025-09-30'
-
-    if date == '':
-        date = datetime.date.today().strftime('%Y-%m-%d')
+def get_trade_data_daily(bs, start_date, end_date, code_list=[]):
     
-    if TRADE_DATE.get(date) is None:
-        print(f'{date} Is Not Trade Day !')
+    if start_date == end_date and TRADE_DATE.get(start_date) is None:
+        print(f'{start_date} Is Not Trade Day !')
         return 
-        
-    pattern_date_start = f'{date} 09:30:00'
-    pattern_date_end = f'{date} 15:00:00'
 
     stock_code_list = get_stock_code_list()
     
@@ -56,18 +45,18 @@ def get_trade_data_by_day(ak, date='', code_list=[]):
 
     failed_list = []
     total_code_list = sorted(list(stock_code_list.keys())) if len(code_list) == 0 else code_list
-    total_code_num = len(total_code_list)
     
     for i, code in tqdm(enumerate(total_code_list, start=1)):
         try:
             # 获取该股票的分钟数据
-            df_minute = ak.stock_zh_a_hist_min_em(
-                symbol=code, 
-                period='5', 
-                start_date=pattern_date_start,
-                end_date=pattern_date_end,
-                adjust="hfq" # 可以选择 "qfq" (前复权), "hfq" (后复权) 或 "" (不复权)
-            )
+            df_minute = bs.query_history_k_data_plus(
+                code=transform_code_name(code),
+                fields="date,time,code,open,high,low,close,volume,amount", # 注意这里新增了 time 字段
+                start_date=start_date,  # 分钟线数据量大，建议缩短查询时间范围
+                end_date=end_date,
+                frequency="5",   # !!! 设置为 "5" 来获取 5 分钟线数据
+                adjustflag="2"   # 前复权
+            ).get_data()
             
             # 检查数据是否为空
             if not df_minute.empty:
@@ -85,16 +74,16 @@ def get_trade_data_by_day(ak, date='', code_list=[]):
             time.sleep(5) # 失败时可以暂停更长时间
             
     if len(failed_list) > 0:
-        json_save(f'./message/failed_list_{date}.json', failed_list)
-        print(f'{date} failed code counts: ', len(failed_list))
+        json_save(f'./message/failed_list_{start_date}_{end_date}.json', failed_list)
+        print(f'{start_date}_{end_date} failed code counts: ', len(failed_list))
         
     return all_minute_data
 
 
-def get_daily_trade_data(ak, date, path='./dataset'):
+def get_daily_trade_data(bs, date, path='./dataset'):
     if TRADE_DATE.get(date) is not None:
         print(f'Start Get Trade Data By Day: {date} ')
-        all_minute_df = get_trade_data_by_day(ak, date)
+        all_minute_df = get_trade_data_daily(bs, date, date)
         concat_trade_data(all_minute_df, date, path=path)
     else:
         print(f'{date} Is Not Trade Day !')
@@ -109,7 +98,7 @@ if __name__ == '__main__':
     if args.date != '':
         date = args.date
     
-    all_minute_df = get_trade_data_by_day(ak, date)
+    all_minute_df = get_trade_data_daily(bs, date, date)
     concat_trade_data(all_minute_df, date)
     
     

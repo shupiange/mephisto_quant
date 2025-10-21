@@ -1,7 +1,8 @@
 from params.update_params import update_all_params
-from data_source.get_daily_trade_data import get_daily_trade_data, get_trade_data_by_day, concat_trade_data
+from data_source.get_trade_data import get_daily_trade_data
 
 import akshare as ak
+import baostock as bs
 
 
 import datetime
@@ -32,9 +33,9 @@ if __name__ == '__main__':
 
     if date == '' and start_date == '' and end_date == '':
         current_date = datetime.date.today().strftime('%Y-%m-%d')
-        get_daily_trade_data(ak, current_date, data_path)
+        get_daily_trade_data(bs, current_date, data_path)
     elif date != '':
-        get_daily_trade_data(ak, date, data_path)
+        get_daily_trade_data(bs, date, data_path)
     elif start_date != '' and end_date != '':
         start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d').date()
         end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
@@ -42,5 +43,5 @@ if __name__ == '__main__':
         current_date = start_date
         while current_date <= end_date:
             current_date_str = current_date.strftime('%Y-%m-%d')
-            get_daily_trade_data(ak, current_date_str, data_path)
+            get_daily_trade_data(bs, current_date_str, data_path)
             current_date += delta
