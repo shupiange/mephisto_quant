@@ -5,6 +5,7 @@ import akshare as ak
 
 
 import datetime
+import pytz
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -26,7 +27,8 @@ if __name__ == '__main__':
     end_date = args.end_date
     data_path = args.data_path
     
-    update_all_params(ak, path='./params')
+    if date == datetime.datetime.now(pytz.timezone('Asia/Shanghai')).strftime('%Y-%m-%d'):
+        update_all_params(ak, path='./params')
 
     if date == '' and start_date == '' and end_date == '':
         current_date = datetime.date.today().strftime('%Y-%m-%d')
@@ -39,6 +41,6 @@ if __name__ == '__main__':
         delta = datetime.timedelta(days=1)
         current_date = start_date
         while current_date <= end_date:
-            current_date_str = current_dt.strftime('%Y-%m-%d')
+            current_date_str = current_date.strftime('%Y-%m-%d')
             get_daily_trade_data(ak, current_date_str, data_path)
-            current_dt += delta
+            current_date += delta
