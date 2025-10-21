@@ -20,20 +20,30 @@ parser.add_argument('--date', type=str, default='', required=False)
 TRADE_DATE = get_trade_date()
 
 
-def concat_trade_data(all_minute_data, date, path='./dataset', source_path='./params'):
-        
-    df_list = []
-    for code, code_df in all_minute_data.items():
-        code_df.loc[:, 'time_rank'] = code_df['time'].rank()
-        df_list.append(code_df)
-        
-    total_df = pd.concat(df_list, axis=0)
-    total_df.to_csv(f'{path}/trade_minute_{date}.csv', index=False)
+def concat_trade_data(all_minute_data, date, path='./dataset'):
     
+    df_list = []
+    
+    if isinstance(date) == str:
+        for code, code_df in all_minute_data.items():
+            code_df.loc[:, 'time_rank'] = code_df['time'].rank()
+            df_list.append(code_df)
+            
+        total_df = pd.concat(df_list, axis=0, ignore_index=True)
+        total_df.to_csv(f'{path}/trade_minute_{date}.csv', index=False)
+        
+    elif isinstance(date) == list and len(date) == 2:
+
+        start_date, end_date = date[0], date[1]
+        for code, code_df in all_minute_data.items():
+            code_df.loc[:, 'time_rank'] = code_df.groupby('code')['time'].rank()
+            df_list.append(code_df)
+            code_df.to_csv(f'{path}/trade_minute_{code}_{start_date}-{end_date}.csv', index=False)
+
     return
 
 
-def get_trade_data_daily(bs, start_date, end_date, code_list=[]):
+def get_trade_minutes_data(bs, start_date, end_date, request_interval=0.5, code_list=[]):
     
     if start_date == end_date and TRADE_DATE.get(start_date) is None:
         print(f'{start_date} Is Not Trade Day !')
@@ -65,7 +75,7 @@ def get_trade_data_daily(bs, start_date, end_date, code_list=[]):
             else:
                 raise(ValueError, 'Empty Query Result')
             # print(f'Step: {total_code_num} / {i}')
-            time.sleep(0.5) # 建议暂停 0.5 到 2 秒，根据你的网络和数据源情况调整
+            time.sleep(request_interval) # 建议暂停 0.5 到 2 秒，根据你的网络和数据源情况调整
     
         except Exception as e:
             # 记录获取失败的股票
@@ -83,22 +93,28 @@ def get_trade_data_daily(bs, start_date, end_date, code_list=[]):
 def get_daily_trade_data(bs, date, path='./dataset'):
     if TRADE_DATE.get(date) is not None:
         print(f'Start Get Trade Data By Day: {date} ')
-        all_minute_df = get_trade_data_daily(bs, date, date)
+        all_minute_df = get_trade_minutes_data(bs, date, date, request_interval=0.5)
         concat_trade_data(all_minute_df, date, path=path)
     else:
         print(f'{date} Is Not Trade Day !')
     return 
 
+def get_range_trade_data(bs, start_date, end_date, path='./dataset'):
+    print(f'Start Get Trade Data By Range: {start_date} - {end_date} ')
+    all_minute_df = get_trade_minutes_data(bs, start_date, end_date, request_interval=1)
+    concat_trade_data(all_minute_df, [start_date, end_date], path=path)
+    return
 
-if __name__ == '__main__':
-    
-    args = parser.parse_args()
 
-    date = datetime.datetime.now(pytz.timezone('Asia/Shanghai')).strftime('%Y-%m-%d')
-    if args.date != '':
-        date = args.date
+# if __name__ == '__main__':
     
-    all_minute_df = get_trade_data_daily(bs, date, date)
-    concat_trade_data(all_minute_df, date)
+#     args = parser.parse_args()
+
+#     date = datetime.datetime.now(pytz.timezone('Asia/Shanghai')).strftime('%Y-%m-%d')
+#     if args.date != '':
+#         date = args.date
+    
+#     all_minute_df = get_trade_data(bs, date, date)
+#     concat_trade_data(all_minute_df, date)
     
     

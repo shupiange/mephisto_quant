@@ -1,4 +1,6 @@
 import json
+import numpy as np
+import datetime
 
 def json_load(path):
     """
@@ -66,3 +68,15 @@ def parse_str_number(x):
     else:
         return np.float32(x)
 
+
+def generate_dates(start_date_str, end_date_str):
+
+    start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+    end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
+
+    date_list = []
+    current_date = start_date
+    while current_date <= end_date:
+        date_list.append(current_date.strftime('%Y-%m-%d'))
+        current_date += datetime.timedelta(days=1)
+    return date_list
