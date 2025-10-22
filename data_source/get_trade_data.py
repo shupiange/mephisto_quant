@@ -27,10 +27,12 @@ TRADE_DATE = get_trade_date()
 FAILURE_MSG_PATH = './message'
 os.makedirs(FAILURE_MSG_PATH, exist_ok=True)
 
+
 def get_failed_filepath(start_date, end_date):
     """生成失败列表文件的完整路径"""
     filename = f'failed_list_{start_date}_{end_date}.json'
     return os.path.join(FAILURE_MSG_PATH, filename)
+
 
 def update_failed_list(newly_failed_codes, start_date, end_date):
     """加载旧列表，合并新失败代码，并保存"""
@@ -110,7 +112,7 @@ def concat_trade_data(all_minute_data, start_date, end_date, path='./dataset'):
     此函数适用于初始下载和修复。
     """
     os.makedirs(path, exist_ok=True)
-    
+        
     for code, code_df in all_minute_data.items():
         
         # 1. 构造文件名
