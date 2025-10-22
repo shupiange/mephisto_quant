@@ -39,10 +39,14 @@ def update_failed_list(newly_failed_codes, start_date, end_date):
     filepath = get_failed_filepath(start_date, end_date)
     
     # 1. 加载旧列表
-    exist_failed_list = json_load(filepath)
+    if os.path.exists(filepath):
+        exist_failed_list = json_load(filepath)
+        
+        # 2. 合并并去重
+        new_total_list = list(set(newly_failed_codes + exist_failed_list))
     
-    # 2. 合并并去重
-    new_total_list = list(set(newly_failed_codes + exist_failed_list))
+    else:
+        new_total_list = list(set(newly_failed_codes))
     
     # 3. 保存新列表
     json_save(filepath, new_total_list)
@@ -73,24 +77,25 @@ def get_trade_minutes_data(bs_session, start_date, end_date, code_list=None, req
 
     for code in tqdm(total_code_list, desc=desc):
         try:
-            bs_code = transform_code_name(code)
+            bs_code, ok = transform_code_name(code)
             
-            df_minute = bs_session.query_history_k_data_plus(
-                code=bs_code,
-                fields="date,time,code,open,high,low,close,volume,amount",
-                start_date=start_date,
-                end_date=end_date,
-                frequency="5", 
-                adjustflag="2"  # 前复权
-            ).get_data()
-            
-            if not df_minute.empty:
-                # Baostock 返回的 'code' 字段是带 sh./sz. 的，我们用原始 6 位代码作为 key
-                all_minute_data[code] = df_minute
-            else:
-                raise ValueError('Empty Query Result')
+            if ok:
+                df_minute = bs_session.query_history_k_data_plus(
+                    code=bs_code,
+                    fields="date,time,code,open,high,low,close,volume,amount",
+                    start_date=start_date,
+                    end_date=end_date,
+                    frequency="5", 
+                    adjustflag="2"  # 前复权
+                ).get_data()
                 
-            time.sleep(request_interval)
+                if not df_minute.empty:
+                    # Baostock 返回的 'code' 字段是带 sh./sz. 的，我们用原始 6 位代码作为 key
+                    all_minute_data[code] = df_minute
+                else:
+                    raise ValueError('Empty Query Result')
+                    
+                time.sleep(request_interval)
             
         except Exception as e:
             newly_failed_codes.append(code)

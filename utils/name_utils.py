@@ -2,7 +2,7 @@ from utils.utils import json_load
 
 import re
 
-def transform_code_name(stock_code: str) -> str:
+def transform_code_name(stock_code: str) -> tuple[str, bool]:
     """
     根据中国 A 股的 6 位数字代码，返回其在 BaoStock 中使用的标准代码格式 (例如: sh.600519)。
 
@@ -32,10 +32,10 @@ def transform_code_name(stock_code: str) -> str:
     else:
         # 其他不常见或不识别的起始代码
         print(f"警告: 无法识别代码 '{code}' 对应的 BaoStock 前缀。")
-        return code
+        return code, False
 
     # 返回带前缀的 BaoStock 代码
-    return prefix + code
+    return prefix + code, True
 
 
 
