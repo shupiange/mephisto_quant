@@ -6,7 +6,7 @@ import os
 import datetime
 import pytz
 
-from params.update_params import update_all_params
+from params.update_params import update_stock_code_list, update_trade_date
 from data_source.get_trade_data import main_get_trade_data
 
 
@@ -30,7 +30,8 @@ def parse_and_run():
     print(f"正在启动数据处理: {args.start_date} 到 {args.end_date} (修复模式: {args.fix})")
 
     if args.end_date == datetime.datetime.now(pytz.timezone('Asia/Shanghai')).strftime('%Y-%m-%d'):
-        update_all_params(path='./params')
+        update_stock_code_list(path='./params')
+        update_trade_date(path='./params')
 
 
     # 调用导入的主处理函数

@@ -1,16 +1,16 @@
 from utils.utils import json_load, json_save, dict_key_diff
-
+from utils.name_utils import transform_code_name
+from params.get_params import get_stock_code_list
+import datetime
+import pytz
 import os
 import akshare as ak
-
-def update_all_params(path='./params'):
-    update_stock_code_list(ak, path)
-    update_trade_date(ak, path)
-    return
+import baostock as bs
 
 
 def update_stock_code_list(path='./params'):
-
+    
+    """更新股票代码参数文件"""
     
     try:
         
@@ -57,7 +57,8 @@ def update_stock_code_list(path='./params'):
 
 
 def update_trade_date(path='./params'):
-
+    
+    """更新交易日期参数文件"""
 
     try:
         
@@ -104,7 +105,49 @@ def update_trade_date(path='./params'):
     return
 
 
+def update_adjust_factor_params(path='./params'):
+    
+    """更新复权因子参数文件"""
+    
+    current_date = datetime.date.today(pytz.timezone('Asia/Shanghai')).strftime('%Y-%m-%d')
+    stock_codes = sorted(get_stock_code_list().keys())
+    
+    
+    adjust_factorys = dict()
+    if os.path.exists(f'{path}/adjust_factor.json'):
+        adjust_factorys = json_load(f'{path}/adjust_factor.json')
+    
+    bs.login()
+    change = False
+    for code in stock_codes:
+        code_name, valid = transform_code_name(code)
+        if not valid:
+            continue
+        rs = bs.query_adjust_factor(
+            code=code_name, 
+            start_date=current_date, 
+            end_date=current_date
+        )
+        
+        if (rs.error_code == '0') & rs.next():
+            change = True
+            adj_factor = {k: v for k, v in zip(rs.fields, rs.get_row_data())}
+            adjust_factorys[code_name] = adjust_factorys.get(code_name, dict())[adj_factor['dividOperateDate']] = {
+                'foreAdjustFactor': adj_factor['foreAdjustFactor'], 
+                'backAdjustFactor': adj_factor['backAdjustFactor'], 
+                'adjustFactor': adj_factor['adjustFactor']
+            }
+    
+    bs.logout()
 
+    if change:
+        if os.path.exists(f'{path}/adjust_factor.json'):
+            json_save(f'{path}/adjust_factor_bak.json', json_load(f'{path}/adjust_factor.json'))
+        
+        json_save(f'{path}/adjust_factor.json', adjust_factorys)
+        print('Success Update Adjust Factor Params !')
+    
+    return
 
 
 
