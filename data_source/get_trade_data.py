@@ -161,7 +161,7 @@ def run_download_mode(bs_session, start_date, end_date, path):
         bs_session, 
         start_date, 
         end_date, 
-        request_interval=0.7
+        request_interval=0.7,
     )
     
     if all_minute_data:
