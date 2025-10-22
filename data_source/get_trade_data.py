@@ -217,7 +217,7 @@ def main_get_trade_data(start_date: str, end_date: str, is_fix: bool, path: str)
             run_fix_mode(bs, start_date, end_date, path)
         else:
             # 使用初始下载模式函数
-            date_chunks = split_date_range(start_date, end_date, chunk_size_days=30)
+            date_chunks = split_date_range(start_date, end_date, chunk_size_days=15)
             for i, (chunk_start, chunk_end) in enumerate(date_chunks, 1):
                 print(f"\n[Chunk {i}/{len(date_chunks)}] 正在处理: {chunk_start} ~ {chunk_end}")            
                 run_download_mode(bs, chunk_start, chunk_end, path)
