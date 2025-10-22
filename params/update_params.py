@@ -1,14 +1,15 @@
 from utils.utils import json_load, json_save, dict_key_diff
 
 import os
+import akshare as ak
 
-def update_all_params(ak, path='./params'):
+def update_all_params(path='./params'):
     update_stock_code_list(ak, path)
     update_trade_date(ak, path)
     return
 
 
-def update_stock_code_list(ak, path='./params'):
+def update_stock_code_list(path='./params'):
 
     
     try:
@@ -55,7 +56,7 @@ def update_stock_code_list(ak, path='./params'):
     return
 
 
-def update_trade_date(ak, path='./params'):
+def update_trade_date(path='./params'):
 
 
     try:
