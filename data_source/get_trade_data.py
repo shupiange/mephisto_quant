@@ -156,7 +156,7 @@ def run_download_mode(bs_session, start_date, end_date, path):
         bs_session, 
         start_date, 
         end_date, 
-        request_interval=1.5
+        request_interval=0.7
     )
     
     if all_minute_data:
@@ -179,7 +179,7 @@ def run_fix_mode(bs_session, start_date, end_date, path):
         bs_session, 
         start_date, 
         end_date, 
-        request_interval=1.5,
+        request_interval=1,
         code_list=failed_codes
     )
     
