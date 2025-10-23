@@ -1,5 +1,5 @@
 from params.update_params import update_all_params
-from data_source.get_trade_data import get_daily_trade_data, get_range_trade_data
+from data_source.fetch_trade_data import get_daily_trade_data, get_range_trade_data
 
 import akshare as ak
 import baostock as bs

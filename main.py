@@ -6,8 +6,8 @@ import os
 import datetime
 import pytz
 
-from params.update_params import update_stock_code_list, update_trade_date
-from data_source.get_trade_data import main_get_trade_data
+from params.update_params import update_stock_code_list, update_trade_date, update_adjust_factor_params
+from data_source.fetch_trade_data import main_get_trade_data, run_pre_adjust_mode
 
 
 def parse_and_run():
@@ -41,6 +41,15 @@ def parse_and_run():
         is_fix=args.fix,
         path=args.path
     )
+    
+    print("行情数据更新完成。")
+    
+    change = update_adjust_factor_params(path='./params')
+    if change:
+        print("复权因子参数已更新。")
+        run_pre_adjust_mode(args.end_date, args.path)
+    else:
+        print("复权因子参数无变化，跳过前复权调整。")
     
     print("\n数据处理流程完成。")
 

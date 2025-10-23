@@ -12,7 +12,7 @@ from tqdm import tqdm
 from utils.utils import json_save, json_load
 from utils.name_utils import transform_code_name
 from utils.datetime_utils import split_date_range
-from params.get_params import get_stock_code_list, get_trade_date
+from params.get_params import get_stock_code_list, get_trade_date, get_adjust_factor_params
 
 
 import argparse
@@ -29,13 +29,18 @@ os.makedirs(FAILURE_MSG_PATH, exist_ok=True)
 
 
 def get_failed_filepath(start_date, end_date):
+    
     """生成失败列表文件的完整路径"""
+    
     filename = f'failed_list_{start_date}_{end_date}.json'
+    
     return os.path.join(FAILURE_MSG_PATH, filename)
 
 
 def update_failed_list(newly_failed_codes, start_date, end_date):
+    
     """加载旧列表，合并新失败代码，并保存"""
+    
     filepath = get_failed_filepath(start_date, end_date)
     
     # 1. 加载旧列表
@@ -56,6 +61,7 @@ def update_failed_list(newly_failed_codes, start_date, end_date):
 # --- 核心函数 1: 数据下载 ---
 
 def get_trade_minutes_data(bs_session, start_date, end_date, code_list=None, request_interval=0.5):
+    
     """
     获取指定代码列表在指定日期范围内的分钟线数据，并处理失败情况。
     """
@@ -112,10 +118,12 @@ def get_trade_minutes_data(bs_session, start_date, end_date, code_list=None, req
 # --- 核心函数 2: 数据合并与保存 (统一的范围模式) ---
 
 def concat_trade_data(all_minute_data, start_date, end_date, path='./dataset'):
+    
     """
     将下载的数据追加/合并到各自的 CSV 文件中 (每个代码一个文件)。
     此函数适用于初始下载和修复。
     """
+    
     os.makedirs(path, exist_ok=True)
         
     for code, code_df in all_minute_data.items():
@@ -153,8 +161,10 @@ def concat_trade_data(all_minute_data, start_date, end_date, path='./dataset'):
 
 # --- 主模式函数 ---
 
-def run_download_mode(bs_session, start_date, end_date, path):
+def run_download_mode(bs_session, start_date, end_date, path, code_list=None):
+    
     """运行初始下载模式"""
+    
     print(f'--- 开始下载数据范围: {start_date} 至 {end_date} ---')
     
     all_minute_data = get_trade_minutes_data(
@@ -162,14 +172,20 @@ def run_download_mode(bs_session, start_date, end_date, path):
         start_date, 
         end_date, 
         request_interval=0.7,
+        code_list=code_list
     )
     
     if all_minute_data:
         concat_trade_data(all_minute_data, start_date, end_date, path=path)
         print("--- 初始下载模式完成 ---")
 
+    return
+
+
 def run_fix_mode(bs_session, start_date, end_date, path):
+    
     """运行失败代码修复模式"""
+    
     filepath = get_failed_filepath(start_date, end_date)
     failed_codes = json_load(filepath)
     
@@ -204,6 +220,42 @@ def run_fix_mode(bs_session, start_date, end_date, path):
             print("本次修复尝试未能成功获取更多数据。")
             
     print("--- 修复模式完成 ---")
+    
+    return
+
+
+def run_pre_adjust_mode(date, path):
+    
+    """运行前复权调整模式"""
+    
+    start_date = '2023-01-01'
+    
+    print(f'--- 启动后前复权调整模式: {start_date} 至 {date} ---')
+    
+    print('获取股票代码列表...')
+    
+    adjust_factor_params = get_adjust_factor_params(path='./params')
+    code_list = []
+    for code, factors in adjust_factor_params.items():
+        if factors.get(date):
+            print(f'股票 {code} 在 {date} 有复权因子更新，需重新下载数据。')
+            code_list.append(code)
+            
+    if len(code_list) > 0:
+        
+        # 登录 Baostock
+        lg = bs.login() 
+        print('login respond error_code:' + lg.error_code)
+        print('login respond error_msg:' + lg.error_msg)
+
+        print(f'共 {len(code_list)} 支股票需要重新下载数据进行复权调整。')
+        
+        date_chunks = split_date_range(start_date, date, chunk_size_days=15)
+        for i, (chunk_start, chunk_end) in enumerate(date_chunks, 1):
+            print(f"\n[Chunk {i}/{len(date_chunks)}] 正在处理: {chunk_start} ~ {chunk_end}")            
+            run_download_mode(bs, chunk_start, chunk_end, path, code_list=code_list)
+    
+    return
 
 
 def main_get_trade_data(start_date: str, end_date: str, is_fix: bool, path: str):

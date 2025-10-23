@@ -147,7 +147,7 @@ def update_adjust_factor_params(path='./params'):
         json_save(f'{path}/adjust_factor.json', adjust_factorys)
         print('Success Update Adjust Factor Params !')
     
-    return
+    return change
 
 
 
