@@ -122,12 +122,9 @@ class StockDBManager:
 
 if __name__ == '__main__':
     # 替换为您的数据库连接信息
-    DB_CONFIG = {
-        "host": "localhost",
-        "database": "your_database_name",  # <-- 必须替换
-        "user": "your_user",               # <-- 必须替换
-        "password": "your_password"        # <-- 必须替换
-    }
+    from config.database_config import DATABASE_CONFIG
+
+    DB_CONFIG = DATABASE_CONFIG
     
     # 确保您的 stock_data 表已经存在 (参考最开始的建表 SQL)
     
