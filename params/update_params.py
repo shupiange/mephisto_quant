@@ -105,11 +105,11 @@ def update_trade_date(path='./params'):
     return
 
 
-def update_adjust_factor_params(path='./params'):
+def update_adjust_factor_params(start_date, path='./params'):
     
     """更新复权因子参数文件"""
     
-    current_date = datetime.date.today(pytz.timezone('Asia/Shanghai')).strftime('%Y-%m-%d')
+    current_date = datetime.datetime.now(pytz.timezone('Asia/Shanghai')).strftime('%Y-%m-%d')
     stock_codes = sorted(get_stock_code_list().keys())
     
     
@@ -125,7 +125,7 @@ def update_adjust_factor_params(path='./params'):
             continue
         rs = bs.query_adjust_factor(
             code=code_name, 
-            start_date=current_date, 
+            start_date=start_date, 
             end_date=current_date
         )
         
