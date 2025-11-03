@@ -44,7 +44,7 @@ def parse_and_run():
     
     print("行情数据更新完成。")
     
-    change = update_adjust_factor_params(path='./params')
+    change = update_adjust_factor_params(args.start_date, args.end_date, path='./params')
     if change:
         print("复权因子参数已更新。")
         run_pre_adjust_mode(args.end_date, args.path)

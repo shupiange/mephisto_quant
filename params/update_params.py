@@ -105,7 +105,7 @@ def update_trade_date(path='./params'):
     return
 
 
-def update_adjust_factor_params(start_date, path='./params'):
+def update_adjust_factor_params(start_date, end_date, path='./params'):
     
     """更新复权因子参数文件"""
     
@@ -126,7 +126,7 @@ def update_adjust_factor_params(start_date, path='./params'):
         rs = bs.query_adjust_factor(
             code=code_name, 
             start_date=start_date, 
-            end_date=current_date
+            end_date=end_date
         )
         
         if (rs.error_code == '0') & rs.next():
