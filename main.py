@@ -22,6 +22,7 @@ def parse_and_run():
     
     parser.add_argument('--start-date', type=str, required=True, help="开始日期 (YYYY-MM-DD)")
     parser.add_argument('--end-date', type=str, required=True, help="结束日期 (YYYY-MM-DD)")
+    parser.add_argument('--adjust-factor', type=str, default="2", help="是否运行前复权调整模式")
     parser.add_argument('--fix', type=bool, default=False, help="是否运行失败代码的修复模式")
     parser.add_argument('--path', type=str, default='./dataset', help="数据保存目录")
 
@@ -38,18 +39,21 @@ def parse_and_run():
     main_get_trade_data(
         start_date=args.start_date,
         end_date=args.end_date,
+        adjust_flag=args.adjust_factor,
         is_fix=args.fix,
         path=args.path
     )
     
     print("行情数据更新完成。")
     
-    change = update_adjust_factor_params(args.start_date, args.end_date, path='./params')
-    if change:
-        print("复权因子参数已更新。")
-        run_pre_adjust_mode(args.end_date, args.path)
-    else:
-        print("复权因子参数无变化，跳过前复权调整。")
+    if args.adjust_factor == "2":
+        
+        change = update_adjust_factor_params(args.start_date, args.end_date, path='./params')
+        if change:
+            print("复权因子参数已更新。")
+            run_pre_adjust_mode(args.end_date, args.path)
+        else:
+            print("复权因子参数无变化，跳过前复权调整。")
     
     print("\n数据处理流程完成。")
 
