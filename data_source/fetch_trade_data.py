@@ -20,7 +20,7 @@ import argparse
 parser = argparse.ArgumentParser(description="批量下载和修复股票分钟线数据 (Baostock)")
 parser.add_argument('--start_date', type=str, required=True, help="开始日期 (YYYY-MM-DD)")
 parser.add_argument('--end_date', type=str, required=True, help="结束日期 (YYYY-MM-DD)")
-parser.add_argument('--fix', action='store_true', help="是否运行失败代码的修复模式")
+parser.add_argument('--fix', type=bool, default=False, help="是否运行失败代码的修复模式")
 parser.add_argument('--path', type=str, default='./dataset', help="数据保存目录")
 
 TRADE_DATE = get_trade_date()
@@ -188,9 +188,13 @@ def run_fix_mode(bs_session, start_date, end_date, adjust_flag, path):
     """运行失败代码修复模式"""
     
     filepath = get_failed_filepath(start_date, end_date)
-    failed_codes = json_load(filepath)
-    
-    if not failed_codes:
+    if os.path.exists(filepath):
+        failed_codes = json_load(filepath)
+    else:
+        print(f"--- 修复模式: {start_date} ~ {end_date} 找不到失败记录 ---")
+        return
+
+    if len(failed_codes) == 0:
         print(f"--- 修复模式: {start_date} ~ {end_date} 没有失败代码需要修复 ---")
         return
     

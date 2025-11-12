@@ -37,9 +37,7 @@ echo ""
 COMMAND="python ${SCRIPT_NAME} \
     --start-date \"${START_DATE}\" \
     --end-date \"${END_DATE}\" \
-    --adjust-factor \"${ADJUST_FACTOR}\" \
-    --fix ${FIX} \
-    --path \"${DATA_PATH}\""
+    --adjust-factor \"${ADJUST_FACTOR}\""
 
 # 运行命令
 echo "🚀 运行命令: ${COMMAND}"
