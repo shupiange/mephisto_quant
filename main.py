@@ -22,7 +22,7 @@ def parse_and_run():
     
     parser.add_argument('--start-date', type=str, required=True, help="开始日期 (YYYY-MM-DD)")
     parser.add_argument('--end-date', type=str, required=True, help="结束日期 (YYYY-MM-DD)")
-    parser.add_argument('--adjust-factor', type=str, default="2", help="是否运行前复权调整模式")
+    parser.add_argument('--adjust-factor', type=str, default="2", help="1: hfq  2: qfq  3: 不复权")
     parser.add_argument('--fix', type=bool, default=False, help="是否运行失败代码的修复模式")
     parser.add_argument('--path', type=str, default='./dataset', help="数据保存目录")
 
