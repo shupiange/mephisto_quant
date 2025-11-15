@@ -1,7 +1,7 @@
 
 DATABASE_CONFIG = {
     "host": "localhost",
-    "database": "your_database_name",
+    "database": "quant",
     "user": "root",
     "password": "",
 }
