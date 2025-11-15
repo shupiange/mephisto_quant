@@ -38,9 +38,10 @@ def write_dataframe_to_mysql(db_manager: StockDBManager, df: pd.DataFrame, table
     # 3. 调用 StockDBManager 的批量插入方法
     # 注意：insert_many_data 默认假设字典的键和顺序就是 SQL 语句的字段。
     # 因为我们已经在 df_selected 中确保了正确的列和顺序，所以这里可以安全调用。
+    print(f"尝试将 {len(data_list)} 条记录写入数据库。")
+
     db_manager.insert_many_data(table_name, data_list)
     
-    print(f"尝试将 {len(data_list)} 条记录写入数据库。")
     
     return
 
