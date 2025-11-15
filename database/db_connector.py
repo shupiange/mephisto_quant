@@ -40,6 +40,31 @@ class StockDBManager:
         # 如果 __enter__ 中捕获了连接错误，exc_type/exc_val/exc_tb 将为 None
         # 如果是其他错误，返回 False 会重新抛出异常，True 则抑制异常。
         return False 
+    
+    def connect(self):
+        """手动建立数据库连接"""
+        if self.conn is None or not self.conn.is_connected():
+            try:
+                self.conn = mysql.connector.connect(
+                    host=self.host,
+                    database=self.database,
+                    user=self.user,
+                    password=self.password
+                )
+                if self.conn.is_connected():
+                    print("数据库连接成功。")
+            except Error as e:
+                print(f"连接数据库时发生错误: {e}")
+                self.conn = None
+                raise
+        return
+    
+    def disconnect(self):
+        """手动关闭数据库连接"""
+        if self.conn and self.conn.is_connected():
+            self.conn.close()
+            print("数据库连接关闭。")
+        return
 
     def execute_query(self, query: str, params: Tuple = None) -> List[Tuple]:
         """执行 SQL 查询（增/删/改/查）"""
