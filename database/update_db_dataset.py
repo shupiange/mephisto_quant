@@ -10,7 +10,7 @@ def read_dataframe_from_mysql(db_manager: StockDBManager, query: str) -> pd.Data
     return
 
 
-def write_dataframe_to_mysql(db_manager: StockDBManager, df: pd.DataFrame, table_fields: List[str]):
+def write_dataframe_to_mysql(db_manager: StockDBManager, df: pd.DataFrame, table_fields: List[str], table_name: str):
     """
     将 Pandas DataFrame 写入 MySQL 表。
 
@@ -38,7 +38,7 @@ def write_dataframe_to_mysql(db_manager: StockDBManager, df: pd.DataFrame, table
     # 3. 调用 StockDBManager 的批量插入方法
     # 注意：insert_many_data 默认假设字典的键和顺序就是 SQL 语句的字段。
     # 因为我们已经在 df_selected 中确保了正确的列和顺序，所以这里可以安全调用。
-    db_manager.insert_many_data(data_list)
+    db_manager.insert_many_data(table_name, data_list)
     
     print(f"尝试将 {len(data_list)} 条记录写入数据库。")
     
@@ -59,7 +59,8 @@ def write_csv_to_mysql(db_manager: StockDBManager, csv_file_path: str, table_fie
         print(f"错误: 无法读取 CSV 文件 {csv_file_path}: {e}")
         return
     table_fields = TABLE_FIELDS_CONFIG[f'{table_fields_name}_fields']
-    write_dataframe_to_mysql(db_manager, df, table_fields)
+    table_name = table_fields_name.split('.')[-1]
+    write_dataframe_to_mysql(db_manager, df=df, table_fields=table_fields, table_name=table_name)
     
     return
 

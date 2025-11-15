@@ -97,7 +97,7 @@ class StockDBManager:
             cursor.close()
 
     # --- 增 (Create) ---
-    def insert_many_data(self, data_list: List[Dict[str, Any]]):
+    def insert_many_data(self, table_name: str, data_list: List[Dict[str, Any]]):
         """
         批量插入多条数据记录。
 
@@ -120,7 +120,7 @@ class StockDBManager:
         placeholders = ', '.join(['%s'] * len(first_record))
         
         # 构造 SQL 语句
-        sql = f"INSERT INTO stock_data ({keys}) VALUES ({placeholders})"
+        sql = f"INSERT INTO {table_name} ({keys}) VALUES ({placeholders})"
         
         # 将字典列表转换为参数元组的列表
         # 注意：这里要求所有字典的 key 顺序必须一致
