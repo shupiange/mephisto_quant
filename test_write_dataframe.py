@@ -1,4 +1,4 @@
-from database.update_db_dataset import write_dataframe_to_mysql, write_csv_to_mysql
+from database.update_db_dataset import write_csv_to_mysql
 from database.db_connector import StockDBManager
 import pandas as pd
 import os
