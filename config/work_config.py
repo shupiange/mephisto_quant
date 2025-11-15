@@ -1,0 +1,1 @@
+WORK_DIR = '/home/mephisto/projects/mephisto_quant'
