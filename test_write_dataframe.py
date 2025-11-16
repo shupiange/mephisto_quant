@@ -20,7 +20,7 @@ if __name__ == '__main__':
     }
     
     # 示例: 读取 CSV 
-    csv_file_path = f'{WORK_DIR}/dataset/trade_minute_000001_2023-01-01_2023-01-15.csv'
+    csv_file_path = f'{WORK_DIR}/dataset/trade_minute_000001_2023-02-15_2023-03-01.csv'
     
     TABLE_NAME = 'stock_data_5_minute' # 数据库表名
 
