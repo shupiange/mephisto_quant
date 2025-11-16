@@ -8,14 +8,15 @@ CONDA_ENV="quant"
 START_DATE="$1"
 END_DATE="$2"
 ADJUST_FACTOR="$3"
+FREQUENCY="$4"
 FIX="False"
 DATA_PATH="./dataset"
 
 # --- 2. 参数输入检查 ---
-if [ $# -lt 3 ]; then
+if [ $# -lt 4 ]; then
     echo "🚨 错误: 参数不足！"
     echo "--------------------------------------------------------"
-    echo "用法: $0 <开始日期> <结束日期> <调整因子>"
+    echo "用法: $0 <开始日期> <结束日期> <调整因子> <频率> [修复模式] [数据路径]"
     echo "示例: $0 2023-01-01 2023-01-15 1 False ./dataset"
     echo "--------------------------------------------------------"
     exit 1
@@ -37,7 +38,8 @@ echo ""
 COMMAND="python ${SCRIPT_NAME} \
     --start-date \"${START_DATE}\" \
     --end-date \"${END_DATE}\" \
-    --adjust-factor \"${ADJUST_FACTOR}\""
+    --adjust-factor \"${ADJUST_FACTOR}\"
+    --frequency \"${FREQUENCY}\""
 
 # 运行命令
 echo "🚀 运行命令: ${COMMAND}"

@@ -23,6 +23,7 @@ def parse_and_run():
     parser.add_argument('--start-date', type=str, required=True, help="开始日期 (YYYY-MM-DD)")
     parser.add_argument('--end-date', type=str, required=True, help="结束日期 (YYYY-MM-DD)")
     parser.add_argument('--adjust-factor', type=str, default="2", help="1: hfq  2: qfq  3: 不复权")
+    parser.add_argument('--frequency', type=str, default="5", help="5: 5min  d: day")
     parser.add_argument('--fix', type=bool, default=False, help="是否运行失败代码的修复模式")
     parser.add_argument('--path', type=str, default='./dataset', help="数据保存目录")
 
@@ -40,13 +41,14 @@ def parse_and_run():
         start_date=args.start_date,
         end_date=args.end_date,
         adjust_flag=args.adjust_factor,
+        frequency=args.frequency,
         is_fix=args.fix,
         path=args.path
     )
     
     print("行情数据更新完成。")
     
-    if args.adjust_factor == "2":
+    if args.adjust_factor == "2" and args.frequency == "d":
         
         change = update_adjust_factor_params(args.start_date, args.end_date, path='./params')
         if change:

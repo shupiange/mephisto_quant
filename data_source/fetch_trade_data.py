@@ -60,7 +60,7 @@ def update_failed_list(newly_failed_codes, start_date, end_date):
 
 # --- 核心函数 1: 数据下载 ---
 
-def get_trade_minutes_data(bs_session, start_date, end_date, adjust_flag="2", code_list=None, request_interval=0.5):
+def get_trade_minutes_data(bs_session, start_date, end_date, adjust_flag="2", frequency="5", code_list=None, request_interval=0.5):
     
     """
     获取指定代码列表在指定日期范围内的分钟线数据，并处理失败情况。
@@ -161,7 +161,7 @@ def concat_trade_data(all_minute_data, start_date, end_date, path='./dataset'):
 
 # --- 主模式函数 ---
 
-def run_download_mode(bs_session, start_date, end_date, adjust_flag, path, code_list=None):
+def run_download_mode(bs_session, start_date, end_date, adjust_flag, frequency, path, code_list=None):
     
     """运行初始下载模式"""
     
@@ -172,6 +172,7 @@ def run_download_mode(bs_session, start_date, end_date, adjust_flag, path, code_
         start_date, 
         end_date, 
         adjust_flag,
+        frequency=frequency,
         request_interval=0.7,
         code_list=code_list
     )
@@ -183,7 +184,7 @@ def run_download_mode(bs_session, start_date, end_date, adjust_flag, path, code_
     return
 
 
-def run_fix_mode(bs_session, start_date, end_date, adjust_flag, path):
+def run_fix_mode(bs_session, start_date, end_date, adjust_flag, frequency, path):
     
     """运行失败代码修复模式"""
     
@@ -206,6 +207,7 @@ def run_fix_mode(bs_session, start_date, end_date, adjust_flag, path):
         start_date, 
         end_date, 
         adjust_flag,
+        frequency,
         request_interval=1,
         code_list=failed_codes
     )
@@ -259,12 +261,12 @@ def run_pre_adjust_mode(date, path):
         date_chunks = split_date_range(start_date, date, chunk_size_days=15)
         for i, (chunk_start, chunk_end) in enumerate(date_chunks, 1):
             print(f"\n[Chunk {i}/{len(date_chunks)}] 正在处理: {chunk_start} ~ {chunk_end}")            
-            run_download_mode(bs, chunk_start, chunk_end, "2", path, code_list=code_list)
+            run_download_mode(bs, chunk_start, chunk_end, "2", "d", path, code_list=code_list)
     
     return
 
 
-def main_get_trade_data(start_date: str, end_date: str, adjust_flag: str, is_fix: bool, path: str):
+def main_get_trade_data(start_date: str, end_date: str, adjust_flag: str, is_fix: bool, frequency: str, path: str):
     """
     主数据处理函数，可供外部调用。
     """
@@ -277,13 +279,13 @@ def main_get_trade_data(start_date: str, end_date: str, adjust_flag: str, is_fix
     try:
         if is_fix:
             # 使用修复模式函数
-            run_fix_mode(bs, start_date, end_date, adjust_flag, path)
+            run_fix_mode(bs, start_date, end_date, adjust_flag, frequency, path)
         else:
             # 使用初始下载模式函数
             date_chunks = split_date_range(start_date, end_date, chunk_size_days=15)
             for i, (chunk_start, chunk_end) in enumerate(date_chunks, 1):
                 print(f"\n[Chunk {i}/{len(date_chunks)}] 正在处理: {chunk_start} ~ {chunk_end}")            
-                run_download_mode(bs, chunk_start, chunk_end, adjust_flag, path)
+                run_download_mode(bs, chunk_start, chunk_end, adjust_flag, frequency, path)
 
     finally:
         # 退出 Baostock
