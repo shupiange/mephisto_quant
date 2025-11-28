@@ -21,22 +21,22 @@ CREATE TABLE quant.stock_data_5_minute (
     code VARCHAR(15) NOT NULL       COMMENT '证券代码 (例如 sh.600519)',
 
     -- 开盘价
-    open DECIMAL(16, 4)             COMMENT '开盘价',
+    open DECIMAL(20, 2)             COMMENT '开盘价',
 
     -- 收盘价
-    close DECIMAL(16, 4)            COMMENT '收盘价',
+    close DECIMAL(20, 2)            COMMENT '收盘价',
 
     -- 最高价
-    high DECIMAL(16, 4)             COMMENT '最高价',
+    high DECIMAL(20, 2)             COMMENT '最高价',
 
     -- 最低价
-    low DECIMAL(16, 4)              COMMENT '最低价',
+    low DECIMAL(20, 2)              COMMENT '最低价',
 
     -- 成交量（单位：股，取决于数据源）
     volume BIGINT                   COMMENT '成交量',
     
-    -- 成交额 (注意：您提供的 amount 类型应为 DECIMAL(18, 2)，但金额通常需要更高的精度和位数，这里沿用您的 DECIMAL(18, 2))
-    amount DECIMAL(20, 4)           COMMENT '成交额',
+    -- 成交额 (注意：您提供的 amount 类型应为 DECIMAL(20, 2)，但金额通常需要更高的精度和位数，这里沿用您的 DECIMAL(20, 2))
+    amount DECIMAL(20, 2)           COMMENT '成交额',
 
     -- 时间
     time BIGINT                     COMMENT '时间',

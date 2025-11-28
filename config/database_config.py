@@ -2,6 +2,6 @@
 DATABASE_CONFIG = {
     "host": "localhost",
     "database": "quant",
-    "user": "root",
+    "user": "mephisto",
     "password": "",
 }

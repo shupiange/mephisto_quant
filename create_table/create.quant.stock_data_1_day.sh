@@ -21,16 +21,16 @@ CREATE TABLE quant.stock_data_1_day (
     code VARCHAR(15) NOT NULL       COMMENT '证券代码 (例如 sh.600519)',
 
     -- 开盘价
-    open DECIMAL(16, 4)             COMMENT '开盘价',
+    open DECIMAL(16, 2)             COMMENT '开盘价',
 
     -- 收盘价
-    close DECIMAL(16, 4)            COMMENT '收盘价',
+    close DECIMAL(16, 2)            COMMENT '收盘价',
 
     -- 最高价
-    high DECIMAL(16, 4)             COMMENT '最高价',
+    high DECIMAL(16, 2)             COMMENT '最高价',
 
     -- 最低价
-    low DECIMAL(16, 4)              COMMENT '最低价',
+    low DECIMAL(16, 2)              COMMENT '最低价',
 
     -- 成交量(单位：股,取决于数据源)
     volume BIGINT                   COMMENT '成交量',
