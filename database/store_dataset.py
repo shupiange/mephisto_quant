@@ -43,7 +43,7 @@ def store_dataset(dataset_path: str, table_name: str, database_name: dict):
             elif os.path.isdir(csv_file_path):
                 # --- 循环写入多个 CSV 文件 (你的核心需求) ---
                 print("\n--- 开始批量导入 CSV ---")
-                csv_files = [os.path.join(csv_file_path, f) for f in os.listdir(csv_file_path) if f.endswith('.csv')][:100000]
+                csv_files = [os.path.join(csv_file_path, f) for f in os.listdir(csv_file_path) if f.endswith('.csv')]
                 
                 if not csv_files:
                     print(f"警告：目录 {csv_file_path} 中没有找到 CSV 文件。")
