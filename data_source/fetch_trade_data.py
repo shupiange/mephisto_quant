@@ -20,7 +20,9 @@ import argparse
 parser = argparse.ArgumentParser(description="批量下载和修复股票分钟线数据 (Baostock)")
 parser.add_argument('--start_date', type=str, required=True, help="开始日期 (YYYY-MM-DD)")
 parser.add_argument('--end_date', type=str, required=True, help="结束日期 (YYYY-MM-DD)")
-parser.add_argument('--fix', type=bool, default=False, help="是否运行失败代码的修复模式")
+parser.add_argument('--adjust_flag', type=str, default="2", help="1: hfq  2: qfq  3: 不复权")
+parser.add_argument('--frequency', type=str, default="5", help="5: 5min  d: day")
+parser.add_argument('--fix', action='store_true', default=False, help="是否运行失败代码的修复模式")
 parser.add_argument('--path', type=str, default='./dataset', help="数据保存目录")
 
 TRADE_DATE = get_trade_date()
@@ -35,6 +37,50 @@ def get_failed_filepath(start_date, end_date):
     filename = f'failed_list_{start_date}_{end_date}.json'
     
     return os.path.join(FAILURE_MSG_PATH, filename)
+
+
+def read_failed_list(start_date, end_date):
+    """Read failed stock list JSON file and return the list of codes (or empty list if not found)."""
+    filepath = get_failed_filepath(start_date, end_date)
+    if not os.path.exists(filepath):
+        return []
+    try:
+        failed = json_load(filepath)
+        if isinstance(failed, list):
+            return failed
+        return []
+    except Exception:
+        return []
+
+
+def find_failed_files_in_range(start_date, end_date):
+    """Find all failed_list files under FAILURE_MSG_PATH whose date ranges are fully contained in the given range.
+
+    Returns a list of filepaths.
+    """
+    files = []
+    try:
+        for fname in os.listdir(FAILURE_MSG_PATH):
+            if not fname.startswith('failed_list_') or not fname.endswith('.json'):
+                continue
+            # expected format: failed_list_{start}_{end}.json
+            parts = fname[len('failed_list_'):-len('.json')].split('_')
+            if len(parts) < 2:
+                continue
+            file_start, file_end = parts[0], parts[1]
+            try:
+                f_start = datetime.datetime.strptime(file_start, '%Y-%m-%d').date()
+                f_end = datetime.datetime.strptime(file_end, '%Y-%m-%d').date()
+                s = datetime.datetime.strptime(start_date, '%Y-%m-%d').date()
+                e = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
+                # include only if the file's date range is fully within provided date range
+                if f_start >= s and f_end <= e:
+                    files.append(os.path.join(FAILURE_MSG_PATH, fname))
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return files
 
 
 def update_failed_list(newly_failed_codes, start_date, end_date):
@@ -188,44 +234,64 @@ def run_fix_mode(bs_session, start_date, end_date, adjust_flag, frequency, path)
     
     """运行失败代码修复模式"""
     
-    filepath = get_failed_filepath(start_date, end_date)
-    if os.path.exists(filepath):
-        failed_codes = json_load(filepath)
-    else:
-        print(f"--- 修复模式: {start_date} ~ {end_date} 找不到失败记录 ---")
+    # Find matching failed_list files within provided range and aggregate codes
+    matching_files = find_failed_files_in_range(start_date, end_date)
+    if not matching_files:
+        print(f"--- 修复模式: {start_date} ~ {end_date} 找不到失败记录或列表为空 ---")
         return
 
-    if len(failed_codes) == 0:
-        print(f"--- 修复模式: {start_date} ~ {end_date} 没有失败代码需要修复 ---")
-        return
-    
-    print(f"--- 启动修复模式：正在尝试重新获取 {len(failed_codes)} 个失败代码 ---")
-    
-    # 1. 获取失败的代码数据
-    newly_fetched_data = get_trade_minutes_data(
-        bs_session, 
-        start_date, 
-        end_date, 
-        adjust_flag,
-        frequency,
-        request_interval=1,
-        code_list=failed_codes
-    )
-    
-    if newly_fetched_data:
-        # 2. 将新获取的数据合并到各自的文件
-        concat_trade_data(newly_fetched_data, start_date, end_date, path=path)
-        
-        # 3. 移除已成功获取的代码，更新失败列表
-        successful_codes = set(newly_fetched_data.keys())
-        remaining_failed_codes = [code for code in failed_codes if code not in successful_codes]
-        
-        if len(remaining_failed_codes) < len(failed_codes):
-            print(f"成功修复了 {len(successful_codes)} 个代码。")
-            json_save(filepath, remaining_failed_codes)
-            print(f"剩余 {len(remaining_failed_codes)} 个代码未修复，失败列表已更新。")
-        else:
-            print("本次修复尝试未能成功获取更多数据。")
+    # For each matching file, retry fetching only for that file's start/end range
+    total_success = 0
+    total_tried = 0
+    for fpath in matching_files:
+        try:
+            # parse start/end from filename
+            fname = os.path.basename(fpath)
+            parts = fname[len('failed_list_'):-len('.json')].split('_')
+            if len(parts) < 2:
+                print(f"警告：无法从文件名解析日期范围：{fname}，跳过。")
+                continue
+            file_start, file_end = parts[0], parts[1]
+            codes = json_load(fpath)
+            if not isinstance(codes, list) or len(codes) == 0:
+                print(f"文件 {fname} 没有需要修复的代码，跳过。")
+                continue
+
+            print(f"--- 修复文件 {fname}（范围 {file_start} ~ {file_end}）: 尝试重新获取 {len(codes)} 个代码 ---")
+            total_tried += len(codes)
+
+            # call per-file fetch
+            newly_fetched_data = get_trade_minutes_data(
+                bs_session,
+                file_start,
+                file_end,
+                adjust_flag,
+                frequency,
+                request_interval=1,
+                code_list=codes,
+            )
+
+            if newly_fetched_data:
+                concat_trade_data(newly_fetched_data, file_start, file_end, path=path)
+                successful_codes = set(newly_fetched_data.keys())
+                total_success += len(successful_codes)
+                remaining = [c for c in codes if c not in successful_codes]
+                if set(remaining) != set(codes):
+                    json_save(fpath, remaining)
+                    print(f"更新失败列表文件 {fname}，剩余 {len(remaining)} 个未修复代码。")
+                else:
+                    print(f"未能修复文件 {fname} 中任何代码。")
+            else:
+                print(f"本次尝试未能修复 {fname} 中的任何代码（无新数据）。")
+
+        except Exception as e:
+            print(f"错误：处理失败文件 {fpath} 时出现异常：{e}")
+            continue
+
+    if total_tried > 0:
+        print(f"修复完成：成功修复 {total_success} / {total_tried} 个代码。")
+    else:
+        print("修复完成：没有要尝试的失败代码文件。")
             
     print("--- 修复模式完成 ---")
     
@@ -296,5 +362,5 @@ def main_get_trade_data(start_date: str, end_date: str, adjust_flag: str, is_fix
 if __name__ == '__main__':
     args = parser.parse_args()
     
-    # 确保主脚本可以直接运行
-    main_get_trade_data(args.start_date, args.end_date, args.fix, args.path)
+    # 确保主脚本可以直接运行，传入 adjust_flag/frequency/is_fix/path
+    main_get_trade_data(args.start_date, args.end_date, args.adjust_flag, args.fix, args.frequency, args.path)

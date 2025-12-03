@@ -2,6 +2,7 @@ from utils.utils import json_load, json_save, dict_key_diff
 from utils.name_utils import transform_code_name
 from params.get_params import get_stock_code_list
 import datetime
+import time
 import pytz
 import os
 import akshare as ak
@@ -103,6 +104,48 @@ def update_trade_date(path='./params'):
             print('Success Update Trade Days !')
             
     return
+
+
+def update_stock_info_delist(path='./params'):
+    """更新股票基本信息及退市信息"""
+    lg = bs.login()
+    # 显示登陆返回信息
+    print('login respond error_code:'+lg.error_code)
+    print('login respond  error_msg:'+lg.error_msg)
+
+    from utils.name_utils import transform_code_name
+
+    code_list = json_load(f'{path}/stock_code_list.json')
+    for code, _ in code_list.items():
+        bs_code, ok = transform_code_name(code)
+        if ok:
+            rs = bs.query_stock_basic(code=bs_code)
+            while (rs.error_code == '0') & rs.next():
+                # 获取一条记录，将记录合并在一起
+                record = rs.get_row_data()
+                """type: 证券类型, 其中1: 股票, 2: 指数, 3: 其它, 4: 可转债, 5: ETF"""
+                """status: 上市状态, 其中1: 上市, 0: 退市"""
+                # record ipoDate	outDate	type	status
+
+    # # 获取证券基本资料
+    # rs = bs.query_stock_basic(code="sh.600000")
+
+    # # 打印结果集
+    # data_list = []
+    # while (rs.error_code == '0') & rs.next():
+    #     # 获取一条记录，将记录合并在一起
+    #     data_list.append(rs.get_row_data())
+    # result = pd.DataFrame(data_list, columns=rs.fields)
+    # # 结果集输出到csv文件
+    # result.to_csv("./stock_basic.csv", encoding="gbk", index=False)
+    # print(result)
+
+    # 登出系统
+    bs.logout()
+
+    return
+
+
 
 
 def update_adjust_factor_params(start_date, end_date, path='./params'):
