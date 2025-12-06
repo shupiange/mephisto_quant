@@ -12,7 +12,7 @@ from tqdm import tqdm
 from utils.utils import json_save, json_load
 from utils.name_utils import transform_code_name
 from utils.datetime_utils import split_date_range
-from params.get_params import get_stock_code_list, get_trade_date, get_adjust_factor_params
+from params.get_params import get_stock_code_list, get_trade_date, get_stock_info_detail_list, get_adjust_factor_params
 
 
 import argparse
@@ -25,9 +25,10 @@ parser.add_argument('--frequency', type=str, default="5", help="5: 5min  d: day"
 parser.add_argument('--fix', action='store_true', default=False, help="是否运行失败代码的修复模式")
 parser.add_argument('--path', type=str, default='./dataset', help="数据保存目录")
 
+from config.work_config import FAILURE_MESSAGE_DIR, PARAMS_DIR
+
 TRADE_DATE = get_trade_date()
-FAILURE_MSG_PATH = './message'
-os.makedirs(FAILURE_MSG_PATH, exist_ok=True)
+STOCK_INFO = get_stock_info_detail_list(PARAMS_DIR)
 
 
 def get_failed_filepath(start_date, end_date):
@@ -36,7 +37,7 @@ def get_failed_filepath(start_date, end_date):
     
     filename = f'failed_list_{start_date}_{end_date}.json'
     
-    return os.path.join(FAILURE_MSG_PATH, filename)
+    return os.path.join(FAILURE_MESSAGE_DIR, filename)
 
 
 def read_failed_list(start_date, end_date):
@@ -60,7 +61,7 @@ def find_failed_files_in_range(start_date, end_date):
     """
     files = []
     try:
-        for fname in os.listdir(FAILURE_MSG_PATH):
+        for fname in os.listdir(FAILURE_MESSAGE_DIR):
             if not fname.startswith('failed_list_') or not fname.endswith('.json'):
                 continue
             # expected format: failed_list_{start}_{end}.json
@@ -75,7 +76,7 @@ def find_failed_files_in_range(start_date, end_date):
                 e = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
                 # include only if the file's date range is fully within provided date range
                 if f_start >= s and f_end <= e:
-                    files.append(os.path.join(FAILURE_MSG_PATH, fname))
+                    files.append(os.path.join(FAILURE_MESSAGE_DIR, fname))
             except Exception:
                 continue
     except Exception:
@@ -128,6 +129,10 @@ def get_trade_minutes_data(bs_session, start_date, end_date, adjust_flag="2", fr
         desc = f"修复代码 ({start_date} ~ {end_date})"
 
     for code in tqdm(total_code_list, desc=desc):
+        
+        if STOCK_INFO.get(code) is None or STOCK_INFO[code]['ipoDate'] > start_date or (STOCK_INFO[code]['outDate'] != '' and STOCK_INFO[code]['outDate'] < start_date):
+            print(f"跳过未上市或已退市股票: {code}")
+            continue
         try:
             bs_code, ok = transform_code_name(code)
             

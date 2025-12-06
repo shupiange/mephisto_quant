@@ -133,9 +133,9 @@ def update_stock_info_detail_list(path='./params'):
                         """type: 证券类型, 其中1: 股票, 2: 指数, 3: 其它, 4: 可转债, 5: ETF"""
                         """status: 上市状态, 其中1: 上市, 0: 退市"""
                         record_dict = {k: v for k, v in zip(rs.fields, record)}
-                        if stock_info_detail_list.get(code, None) is not None:
+                        if stock_info_detail_list.get(code) is None:
                             stock_info_detail_list[code] = record_dict
-                        elif stock_info_detail_list[code]['outDate'] < record_dict['outDate']:
+                        elif stock_info_detail_list[code]['outDate'] == '' and record_dict['outDate'] != '':
                             stock_info_detail_list[code] = record_dict
                     time.sleep(0.1)
                 except Exception as e:
