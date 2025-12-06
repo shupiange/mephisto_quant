@@ -10,5 +10,10 @@ def get_stock_code_list(path='./params'):
 def get_trade_date(path='./params'):
     return json_load(f'{path}/trade_date.json')
 
+
+def get_stock_info_detail_list(path='./params'):
+    return json_load(f'{path}/stock_info_detail_list.json')
+
+
 def get_adjust_factor_params(path='./params'):
     return json_load(f'{path}/adjust_factor.json')
