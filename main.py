@@ -6,9 +6,8 @@ import os
 import datetime
 import pytz
 
-from params.update_params import update_stock_code_list, update_trade_date, update_adjust_factor_params
+from params.update_params import update_stock_code_list, update_trade_date, update_adjust_factor_params, update_stock_info_detail_list
 from data_source.fetch_trade_data import main_get_trade_data, run_pre_adjust_mode
-
 
 def parse_and_run():
     """
@@ -33,17 +32,19 @@ def parse_and_run():
 
     update_stock_code_list(path='./params')
     update_trade_date(path='./params')
+    update_stock_info_detail_list(path='./params')
 
 
     # 调用导入的主处理函数
-    main_get_trade_data(
-        start_date=args.start_date,
-        end_date=args.end_date,
-        adjust_flag=args.adjust_factor,
-        frequency=args.frequency,
-        is_fix=args.fix,
-        path=args.path
-    )
+    if args.adjust_factor == "1":
+        main_get_trade_data(
+            start_date=args.start_date,
+            end_date=args.end_date,
+            adjust_flag=args.adjust_factor,
+            frequency=args.frequency,
+            is_fix=args.fix,
+            path=args.path
+        )
     
     print("行情数据更新完成。")
     

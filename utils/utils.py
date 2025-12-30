@@ -80,3 +80,8 @@ def generate_dates(start_date_str, end_date_str):
         date_list.append(current_date.strftime('%Y-%m-%d'))
         current_date += datetime.timedelta(days=1)
     return date_list
+
+
+
+def is_stock_on_trade(stock_codes, code, start_date, end_date):
+    return stock_codes.get(code) is None or stock_codes[code]['ipoDate'] > start_date or (stock_codes[code]['outDate'] != '' and stock_codes[code]['outDate'] < start_date)

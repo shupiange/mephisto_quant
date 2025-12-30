@@ -9,7 +9,7 @@ START_DATE="$1"
 END_DATE="$2"
 ADJUST_FACTOR="$3"
 FREQUENCY="$4"
-FIX="False"
+FIX="True"
 DATA_PATH="./dataset"
 
 # --- 2. 参数输入检查 ---
@@ -39,7 +39,8 @@ COMMAND="python ${SCRIPT_NAME} \
     --start-date \"${START_DATE}\" \
     --end-date \"${END_DATE}\" \
     --adjust-factor \"${ADJUST_FACTOR}\"
-    --frequency \"${FREQUENCY}\""
+    --frequency \"${FREQUENCY}\"
+    --fix \"${FIX}\""
 
 # 运行命令
 echo "🚀 运行命令: ${COMMAND}"

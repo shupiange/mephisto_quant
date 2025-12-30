@@ -9,7 +9,7 @@ import os
 
 from tqdm import tqdm
 
-from utils.utils import json_save, json_load
+from utils.utils import json_save, json_load, is_stock_on_trade
 from utils.name_utils import transform_code_name
 from utils.datetime_utils import split_date_range
 from params.get_params import get_stock_code_list, get_trade_date, get_stock_info_detail_list, get_adjust_factor_params
@@ -25,7 +25,7 @@ parser.add_argument('--frequency', type=str, default="5", help="5: 5min  d: day"
 parser.add_argument('--fix', action='store_true', default=False, help="是否运行失败代码的修复模式")
 parser.add_argument('--path', type=str, default='./dataset', help="数据保存目录")
 
-from config.work_config import FAILURE_MESSAGE_DIR, PARAMS_DIR
+from config.work_config import FAILURE_MESSAGE_DIR, PARAMS_DIR, DATASET_DIR
 
 TRADE_DATE = get_trade_date()
 STOCK_INFO = get_stock_info_detail_list(PARAMS_DIR)
@@ -90,19 +90,12 @@ def update_failed_list(newly_failed_codes, start_date, end_date):
     
     filepath = get_failed_filepath(start_date, end_date)
     
-    # 1. 加载旧列表
-    if os.path.exists(filepath):
-        exist_failed_list = json_load(filepath)
-        
-        # 2. 合并并去重
-        new_total_list = list(set(newly_failed_codes + exist_failed_list))
-    
+    if len(newly_failed_codes) == 0:
+        os.remove(filepath)
     else:
-        new_total_list = list(set(newly_failed_codes))
-    
-    # 3. 保存新列表
-    json_save(filepath, new_total_list)
-    return new_total_list
+        json_save(filepath, newly_failed_codes)
+
+    return
 
 
 # --- 核心函数 1: 数据下载 ---
@@ -130,9 +123,10 @@ def get_trade_minutes_data(bs_session, start_date, end_date, adjust_flag="2", fr
 
     for code in tqdm(total_code_list, desc=desc):
         
-        if STOCK_INFO.get(code) is None or STOCK_INFO[code]['ipoDate'] > start_date or (STOCK_INFO[code]['outDate'] != '' and STOCK_INFO[code]['outDate'] < start_date):
+        if is_stock_on_trade(STOCK_INFO, code, start_date, end_date):
             print(f"跳过未上市或已退市股票: {code}")
             continue
+
         try:
             bs_code, ok = transform_code_name(code)
             
@@ -142,7 +136,7 @@ def get_trade_minutes_data(bs_session, start_date, end_date, adjust_flag="2", fr
                     fields="date,time,code,open,high,low,close,volume,amount",
                     start_date=start_date,
                     end_date=end_date,
-                    frequency="5", 
+                    frequency=frequency, 
                     adjustflag=adjust_flag  # 前复权  1: 后复权  2: 前复权  3: 不复权
                 ).get_data()
                 
@@ -158,12 +152,8 @@ def get_trade_minutes_data(bs_session, start_date, end_date, adjust_flag="2", fr
             newly_failed_codes.append(code)
             print(f"\n获取股票 {code} 的分钟数据失败: {e}")
             time.sleep(request_interval * 2 + 1)
-            
-    # 更新失败列表
-    if newly_failed_codes:
-        update_failed_list(newly_failed_codes, start_date, end_date)
-        
-    return all_minute_data
+                    
+    return all_minute_data, newly_failed_codes
 
 
 # --- 核心函数 2: 数据合并与保存 (统一的范围模式) ---
@@ -218,7 +208,7 @@ def run_download_mode(bs_session, start_date, end_date, adjust_flag, frequency, 
     
     print(f'--- 开始下载数据范围: {start_date} 至 {end_date} ---')
     
-    all_minute_data = get_trade_minutes_data(
+    all_minute_data, failed_list = get_trade_minutes_data(
         bs_session, 
         start_date, 
         end_date, 
@@ -228,8 +218,10 @@ def run_download_mode(bs_session, start_date, end_date, adjust_flag, frequency, 
         code_list=code_list
     )
     
+    update_failed_list(failed_list, start_date, end_date)
+    
     if all_minute_data:
-        concat_trade_data(all_minute_data, start_date, end_date, path=path)
+        concat_trade_data(all_minute_data, start_date, end_date, path=f'{DATASET_DIR}/minutes_{frequency}_data')
         print("--- 初始下载模式完成 ---")
 
     return
@@ -246,8 +238,6 @@ def run_fix_mode(bs_session, start_date, end_date, adjust_flag, frequency, path)
         return
 
     # For each matching file, retry fetching only for that file's start/end range
-    total_success = 0
-    total_tried = 0
     for fpath in matching_files:
         try:
             # parse start/end from filename
@@ -263,10 +253,9 @@ def run_fix_mode(bs_session, start_date, end_date, adjust_flag, frequency, path)
                 continue
 
             print(f"--- 修复文件 {fname}（范围 {file_start} ~ {file_end}）: 尝试重新获取 {len(codes)} 个代码 ---")
-            total_tried += len(codes)
 
             # call per-file fetch
-            newly_fetched_data = get_trade_minutes_data(
+            newly_fetched_data, failed_list = get_trade_minutes_data(
                 bs_session,
                 file_start,
                 file_end,
@@ -276,13 +265,14 @@ def run_fix_mode(bs_session, start_date, end_date, adjust_flag, frequency, path)
                 code_list=codes,
             )
 
-            if newly_fetched_data:
-                concat_trade_data(newly_fetched_data, file_start, file_end, path=path)
+            # 更新失败列表
+            update_failed_list(failed_list, file_start, file_end)
+
+            if len(newly_fetched_data.items()) > 0:
+                concat_trade_data(newly_fetched_data, file_start, file_end, path=f'{DATASET_DIR}/minutes_{frequency}_data')
                 successful_codes = set(newly_fetched_data.keys())
-                total_success += len(successful_codes)
                 remaining = [c for c in codes if c not in successful_codes]
-                if set(remaining) != set(codes):
-                    json_save(fpath, remaining)
+                if len(remaining) < len(codes):
                     print(f"更新失败列表文件 {fname}，剩余 {len(remaining)} 个未修复代码。")
                 else:
                     print(f"未能修复文件 {fname} 中任何代码。")
@@ -292,11 +282,6 @@ def run_fix_mode(bs_session, start_date, end_date, adjust_flag, frequency, path)
         except Exception as e:
             print(f"错误：处理失败文件 {fpath} 时出现异常：{e}")
             continue
-
-    if total_tried > 0:
-        print(f"修复完成：成功修复 {total_success} / {total_tried} 个代码。")
-    else:
-        print("修复完成：没有要尝试的失败代码文件。")
             
     print("--- 修复模式完成 ---")
     

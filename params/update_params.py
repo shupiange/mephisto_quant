@@ -7,6 +7,7 @@ import pytz
 import os
 import akshare as ak
 import baostock as bs
+from tqdm import tqdm
 
 
 def update_stock_code_list(path='./params'):
@@ -121,7 +122,7 @@ def update_stock_info_detail_list(path='./params'):
         
     stock_code_list = get_stock_code_list()
     
-    for code, _ in stock_code_list.items():
+    for code, _ in tqdm(stock_code_list.items(), desc='更新股票列表'):
         bs_code, ok = transform_code_name(code)
         if ok:
             if stock_info_detail_list.get(code, {'status': 1})['status'] == 1:
