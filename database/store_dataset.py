@@ -6,7 +6,7 @@ import shutil
 import time
 from tqdm import tqdm
 from config.database_config import DATABASE_CONFIG
-from config.work_config import WORK_DIR
+from config.work_config import DATASET_DIR
 import argparse
 
 parser = argparse.ArgumentParser(description="存储数据集到 MySQL 数据库的脚本。")
@@ -26,7 +26,7 @@ def store_dataset(dataset_path: str, table_name: str, database_name: dict):
         'password': DATABASE_CONFIG['password']
     }
 
-    csv_file_path = f'{WORK_DIR}/dataset/{dataset_path}' if dataset_path != '' else f'{WORK_DIR}/dataset/'
+    csv_file_path = f'{DATASET_DIR}/{dataset_path}/' if dataset_path != '' else f'{DATASET_DIR}/'
 
     # 2. 使用 'with' 语句自动管理连接
     try:
@@ -37,7 +37,7 @@ def store_dataset(dataset_path: str, table_name: str, database_name: dict):
                 print("\n--- 开始导入 DataFrame ---")
                 df_c = pd.read_csv(csv_file_path, dtype=TABLE_FIELDS_CONFIG[f'{database_name}.{table_name}'])
                 db.insert_from_dataframe(table_name, df_c)
-                shutil.move(f'{WORK_DIR}/dataset/{csv_file_path}', f'{WORK_DIR}/dataset/archived/{csv_file_path}')
+                shutil.move(f'{DATASET_DIR}/{dataset_path}/{csv_file_path}', f'{DATASET_DIR}/{dataset_path}/archived/{csv_file_path}')
                 print("--- CSV 导入完成 ---")
 
             elif os.path.isdir(csv_file_path):
@@ -53,7 +53,7 @@ def store_dataset(dataset_path: str, table_name: str, database_name: dict):
                     df_c = pd.read_csv(file_path, dtype=TABLE_FIELDS_CONFIG[f'{database_name}.{table_name}'])
                     db.insert_from_dataframe(table_name, df_c)
                     # print(f"已写入MySql: {file_path}")
-                    shutil.move(file_path, f'{WORK_DIR}/dataset/archived/{os.path.basename(file_path)}')
+                    shutil.move(file_path, f'{DATASET_DIR}/{dataset_path}/archived/{os.path.basename(file_path)}')
                     # print(f"已移动文件: {file_path}")
                     # time.sleep(0.1)
 
@@ -77,6 +77,6 @@ def store_dataset(dataset_path: str, table_name: str, database_name: dict):
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    print(f"正在存储数据集: {WORK_DIR}/dataset/{args.dataset_path} 到表 {args.table_name} (数据库: {args.database_name})")
+    print(f"正在存储数据集: {DATASET_DIR}/{args.dataset_path}/ 到表 {args.table_name} (数据库: {args.database_name})")
     store_dataset(args.dataset_path, args.table_name, args.database_name)
     print("\n数据集存储流程完成。")

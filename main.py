@@ -8,6 +8,7 @@ import pytz
 
 from params.update_params import update_stock_code_list, update_trade_date, update_adjust_factor_params, update_stock_info_detail_list
 from data_source.fetch_trade_data import main_get_trade_data, run_pre_adjust_mode
+from config.work_config import DATASET_DIR
 
 def parse_and_run():
     """
@@ -22,7 +23,7 @@ def parse_and_run():
     parser.add_argument('--start-date', type=str, required=True, help="开始日期 (YYYY-MM-DD)")
     parser.add_argument('--end-date', type=str, required=True, help="结束日期 (YYYY-MM-DD)")
     parser.add_argument('--adjust-factor', type=str, default="2", help="1: hfq  2: qfq  3: 不复权")
-    parser.add_argument('--frequency', type=str, default="5", help="5: 5min  d: day")
+    parser.add_argument('--frequency', type=str, default="30", help="5: 5min  d: day")
     parser.add_argument('--fix', type=bool, default=False, help="是否运行失败代码的修复模式")
     parser.add_argument('--path', type=str, default='./dataset', help="数据保存目录")
 
@@ -33,7 +34,9 @@ def parse_and_run():
     update_stock_code_list(path='./params')
     update_trade_date(path='./params')
     update_stock_info_detail_list(path='./params')
+    
 
+    work_path = f'{DATASET_DIR}/minutes_{args.frequency}_data'
 
     # 调用导入的主处理函数
     if args.adjust_factor == "1":
@@ -43,7 +46,7 @@ def parse_and_run():
             adjust_flag=args.adjust_factor,
             frequency=args.frequency,
             is_fix=args.fix,
-            path=args.path
+            path=work_path
         )
     
     print("行情数据更新完成。")
@@ -53,7 +56,7 @@ def parse_and_run():
         change = update_adjust_factor_params(args.start_date, args.end_date, path='./params')
         if change:
             print("复权因子参数已更新。")
-            run_pre_adjust_mode(args.end_date, args.path)
+            run_pre_adjust_mode(args.end_date, work_path)
         else:
             print("复权因子参数无变化，跳过前复权调整。")
     

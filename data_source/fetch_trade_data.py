@@ -221,7 +221,7 @@ def run_download_mode(bs_session, start_date, end_date, adjust_flag, frequency, 
     update_failed_list(failed_list, start_date, end_date)
     
     if all_minute_data:
-        concat_trade_data(all_minute_data, start_date, end_date, path=f'{DATASET_DIR}/minutes_{frequency}_data')
+        concat_trade_data(all_minute_data, start_date, end_date, path=path)
         print("--- 初始下载模式完成 ---")
 
     return
@@ -269,7 +269,7 @@ def run_fix_mode(bs_session, start_date, end_date, adjust_flag, frequency, path)
             update_failed_list(failed_list, file_start, file_end)
 
             if len(newly_fetched_data.items()) > 0:
-                concat_trade_data(newly_fetched_data, file_start, file_end, path=f'{DATASET_DIR}/minutes_{frequency}_data')
+                concat_trade_data(newly_fetched_data, file_start, file_end, path=path)
                 successful_codes = set(newly_fetched_data.keys())
                 remaining = [c for c in codes if c not in successful_codes]
                 if len(remaining) < len(codes):

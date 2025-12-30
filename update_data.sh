@@ -9,7 +9,7 @@ START_DATE="$1"
 END_DATE="$2"
 ADJUST_FACTOR="$3"
 FREQUENCY="$4"
-FIX="True"
+FIX="False"
 DATA_PATH="./dataset"
 
 # --- 2. 参数输入检查 ---
