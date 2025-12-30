@@ -47,8 +47,7 @@ def parse_and_run():
             frequency=args.frequency,
             is_fix=args.fix,
             path=work_path
-        )
-    
+        ) 
     print("行情数据更新完成。")
     
     if args.adjust_factor == "2" and args.frequency == "d":

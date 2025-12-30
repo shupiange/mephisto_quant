@@ -31,7 +31,7 @@ def transform_code_name(stock_code: str) -> tuple[str, bool]:
         prefix = "sz."
     else:
         # 其他不常见或不识别的起始代码
-        print(f"警告: 无法识别代码 '{code}' 对应的 BaoStock 前缀。")
+        # print(f"警告: 无法识别代码 '{code}' 对应的 BaoStock 前缀。")
         return code, False
 
     # 返回带前缀的 BaoStock 代码

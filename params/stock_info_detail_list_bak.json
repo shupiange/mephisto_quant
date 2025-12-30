@@ -41430,5 +41430,29 @@
     "outDate": "",
     "type": "1",
     "status": "1"
+  },
+  "001369": {
+    "code": "sz.001369",
+    "code_name": "双欣环保",
+    "ipoDate": "2025-12-30",
+    "outDate": "",
+    "type": "1",
+    "status": "1"
+  },
+  "001396": {
+    "code": "sz.001396",
+    "code_name": "誉帆科技",
+    "ipoDate": "2025-12-30",
+    "outDate": "",
+    "type": "1",
+    "status": "1"
+  },
+  "688809": {
+    "code": "sh.688809",
+    "code_name": "强一股份",
+    "ipoDate": "2025-12-30",
+    "outDate": "",
+    "type": "1",
+    "status": "1"
   }
 }

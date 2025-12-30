@@ -39,8 +39,8 @@ COMMAND="python ${SCRIPT_NAME} \
     --start-date \"${START_DATE}\" \
     --end-date \"${END_DATE}\" \
     --adjust-factor \"${ADJUST_FACTOR}\"
-    --frequency \"${FREQUENCY}\"
-    --fix \"${FIX}\""
+    --frequency \"${FREQUENCY}\""
+    # --fix \"${FIX}\""
 
 # 运行命令
 echo "🚀 运行命令: ${COMMAND}"
