@@ -91,7 +91,8 @@ def update_failed_list(newly_failed_codes, start_date, end_date):
     filepath = get_failed_filepath(start_date, end_date)
     
     if len(newly_failed_codes) == 0:
-        os.remove(filepath)
+        if os.path.exists(filepath):
+            os.remove(filepath)
     else:
         json_save(filepath, newly_failed_codes)
 
@@ -111,7 +112,6 @@ def get_trade_minutes_data(bs_session, start_date, end_date, adjust_flag="2", fr
         stock_codes = get_stock_code_list().keys()
         total_code_list = sorted(list(stock_codes))
     else:
-        # 如果是修复模式，使用传入的 code_list
         total_code_list = code_list 
     
     all_minute_data = dict()
@@ -307,18 +307,18 @@ def run_pre_adjust_mode(date, path):
             
     if len(code_list) > 0:
         
-        # 登录 Baostock
-        lg = bs.login() 
-        print('login respond error_code:' + lg.error_code)
-        print('login respond error_msg:' + lg.error_msg)
-
         print(f'共 {len(code_list)} 支股票需要重新下载数据进行复权调整。')
         
         date_chunks = split_date_range(start_date, date, chunk_size_days=15)
         for i, (chunk_start, chunk_end) in enumerate(date_chunks, 1):
+            # 登录 Baostock
+            lg = bs.login() 
+            print('login respond error_code:' + lg.error_code)
+            print('login respond error_msg:' + lg.error_msg)
             print(f"\n[Chunk {i}/{len(date_chunks)}] 正在处理: {chunk_start} ~ {chunk_end}")            
             run_download_mode(bs, chunk_start, chunk_end, "2", "d", path, code_list=code_list)
-    
+            bs.logout()
+    bs.logout()
     return
 
 
@@ -326,22 +326,20 @@ def main_get_trade_data(start_date: str, end_date: str, adjust_flag: str, is_fix
     """
     主数据处理函数，可供外部调用。
     """
-    
-    # 登录 Baostock
-    lg = bs.login()
-    print('login respond error_code:' + lg.error_code)
-    print('login respond error_msg:' + lg.error_msg)
-
     try:
         if is_fix:
             # 使用修复模式函数
+            lg = bs.login()
             run_fix_mode(bs, start_date, end_date, adjust_flag, frequency, path)
         else:
             # 使用初始下载模式函数
             date_chunks = split_date_range(start_date, end_date, chunk_size_days=15)
             for i, (chunk_start, chunk_end) in enumerate(date_chunks, 1):
+                # 登录 Baostock
+                lg = bs.login()
                 print(f"\n[Chunk {i}/{len(date_chunks)}] 正在处理: {chunk_start} ~ {chunk_end}")            
                 run_download_mode(bs, chunk_start, chunk_end, adjust_flag, frequency, path)
+                bs.logout()
 
     finally:
         # 退出 Baostock
