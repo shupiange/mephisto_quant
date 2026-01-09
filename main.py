@@ -36,10 +36,12 @@ def parse_and_run():
     update_stock_info_detail_list(path='./params')
     
 
-    work_path = f'{DATASET_DIR}/minutes_{args.frequency}_data'
 
     # 调用导入的主处理函数
     if args.adjust_factor == "1":
+
+        work_path = f'{DATASET_DIR}/minutes_{args.frequency}_data'
+
         main_get_trade_data(
             start_date=args.start_date,
             end_date=args.end_date,
@@ -51,6 +53,8 @@ def parse_and_run():
     print("行情数据更新完成。")
     
     if args.adjust_factor == "2" and args.frequency == "d":
+
+        work_path = f'{DATASET_DIR}/days_{args.frequency}_data'
         
         change = update_adjust_factor_params(args.start_date, args.end_date, path='./params')
         if change:

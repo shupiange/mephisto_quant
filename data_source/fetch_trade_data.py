@@ -318,7 +318,7 @@ def run_pre_adjust_mode(date, path):
             print(f"\n[Chunk {i}/{len(date_chunks)}] 正在处理: {chunk_start} ~ {chunk_end}")            
             run_download_mode(bs, chunk_start, chunk_end, "2", "d", path, code_list=code_list)
             bs.logout()
-    bs.logout()
+
     return
 
 
