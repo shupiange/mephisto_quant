@@ -2,7 +2,7 @@
 
 # 要创建的数据库和表名
 DATABASE_NAME="quant"
-TABLE_NAME="stock_data_5_minute"
+TABLE_NAME="stock_data_30_minute"
 
 MYSQL_CMD="sudo mysql"
 
