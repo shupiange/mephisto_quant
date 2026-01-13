@@ -49,14 +49,43 @@ def store_dataset(dataset_path: str, table_name: str, database_name: dict):
                     print(f"警告：目录 {csv_file_path} 中没有找到 CSV 文件。")
                     return
                 
-                for file_path in tqdm(csv_files, desc='写入MySql中:'):
-                    df_c = pd.read_csv(file_path, dtype=TABLE_FIELDS_CONFIG[f'{database_name}.{table_name}'])
-                    db.insert_from_dataframe(table_name, df_c)
-                    # print(f"已写入MySql: {file_path}")
-                    shutil.move(file_path, f'{DATASET_DIR}/{dataset_path}/archived/{os.path.basename(file_path)}')
-                    # print(f"已移动文件: {file_path}")
-                    # time.sleep(0.1)
+                # for file_path in tqdm(csv_files, desc='写入MySql中:'):
+                #     df_c = pd.read_csv(file_path, dtype=TABLE_FIELDS_CONFIG[f'{database_name}.{table_name}'])
+                #     db.insert_from_dataframe(table_name, df_c)
+                #     # print(f"已写入MySql: {file_path}")
+                #     shutil.move(file_path, f'{DATASET_DIR}/{dataset_path}/archived/{os.path.basename(file_path)}')
+                #     # print(f"已移动文件: {file_path}")
+                #     # time.sleep(0.1)
+                BATCH_SIZE = 10000
+                pending_dfs = []
+                processed_files = []
 
+                for file_path in tqdm(csv_files, desc='处理并聚合文件中:'):
+                    # 1. 读取数据并加入缓存列表
+                    df_c = pd.read_csv(file_path, dtype=TABLE_FIELDS_CONFIG[f'{database_name}.{table_name}'])
+                    pending_dfs.append(df_c)
+                    processed_files.append(file_path)
+
+                    # 2. 检查是否达到 10000 个文件
+                    if len(pending_dfs) >= BATCH_SIZE:
+                        # 聚合并写入
+                        full_df = pd.concat(pending_dfs, ignore_index=True)
+                        db.insert_from_dataframe(table_name, full_df)
+                        
+                        # 批量移动文件
+                        for f in processed_files:
+                            shutil.move(f, f'{DATASET_DIR}/{dataset_path}/archived/{os.path.basename(f)}')
+                        
+                        # 清空缓存
+                        pending_dfs = []
+                        processed_files = []
+
+                # 3. 循环结束后，处理剩余不足 10000 个的文件（收尾）
+                if len(pending_dfs) > 0:
+                    full_df = pd.concat(pending_dfs, ignore_index=True)
+                    db.insert_from_dataframe(table_name, full_df)
+                    for f in processed_files:
+                        shutil.move(f, f'{DATASET_DIR}/{dataset_path}/archived/{os.path.basename(f)}')
             else:
                 print(f"错误：提供的路径 {csv_file_path} 不是有效的 CSV 文件或目录。")
                 return
