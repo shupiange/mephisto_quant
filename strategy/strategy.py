@@ -70,11 +70,6 @@ class BacktestEngine:
         self.context = Context(self.hold)
         self.daily_data = {} # date -> {code -> {open, close}}
 
-    def _parse_custom_date(self, date_str):
-        # 格式: 20251201093000000 -> YYYYMMDD
-        # 只需要提取日期部分进行分组
-        return str(date_str)[:8]
-
     def load_data(self):
         print("Loading data...")
         all_dfs = []
@@ -88,7 +83,6 @@ class BacktestEngine:
             
             df = df.copy()
             df['code'] = code
-            df['day_str'] = df['date'].apply(self._parse_custom_date)
             all_dfs.append(df)
         
         if not all_dfs:
@@ -100,7 +94,7 @@ class BacktestEngine:
         # 我们需要每一天的 Open (09:30 bar's open) 和 Close (15:00 bar's close)
         # 假设数据是按时间排序的
         
-        grouped = combined_df.groupby(['day_str', 'code'])
+        grouped = combined_df.groupby(['date', 'code'])
         
         processed_data = {} # day_str -> {code -> {open_price, close_price}}
         
