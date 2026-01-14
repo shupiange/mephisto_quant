@@ -214,7 +214,7 @@ def run_download_mode(bs_session, start_date, end_date, adjust_flag, frequency, 
         end_date, 
         adjust_flag,
         frequency=frequency,
-        request_interval=0.7,
+        request_interval=0.3,
         code_list=code_list
     )
     

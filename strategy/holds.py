@@ -53,7 +53,7 @@ class Hold:
 
     def settle(self):
         """
-        每日盘前调用，处理T+1解冻
+        每日盘前调用, 处理T+1解冻
         """
         for code, pos in self.positions.items():
             pos.settle()

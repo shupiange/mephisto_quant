@@ -38,7 +38,7 @@ def parse_and_run():
 
 
     # 调用导入的主处理函数
-    if args.adjust_factor == "1":
+    if args.adjust_factor == "1" and args.frequency == "d":
 
         work_path = f'{DATASET_DIR}/minutes_{args.frequency}_data'
 
@@ -52,6 +52,22 @@ def parse_and_run():
         ) 
     print("行情数据更新完成。")
     
+    if args.adjust_factor == "1" and args.frequency == "30":
+
+        work_path = f'{DATASET_DIR}/minutes_{args.frequency}_data'
+
+        main_get_trade_data(
+            start_date=args.start_date,
+            end_date=args.end_date,
+            adjust_flag=args.adjust_factor,
+            frequency=args.frequency,
+            is_fix=args.fix,
+            path=work_path
+        ) 
+    print("行情数据更新完成。")
+
+
+
     if args.adjust_factor == "2" and args.frequency == "d":
 
         work_path = f'{DATASET_DIR}/days_{args.frequency}_data'
