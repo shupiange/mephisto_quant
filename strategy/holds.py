@@ -15,13 +15,9 @@ class Position:
         2. 增加总持仓
         3. 可卖持仓不变 (T+1)
         """
-        if self.total_volume + volume > 0:
-            total_cost = self.total_volume * self.avg_cost + price * volume
-            self.total_volume += volume
-            self.avg_cost = total_cost / self.total_volume
-        else:
-            # 理论上买入 volume 必须 > 0，这里防守一下
-            self.total_volume += volume
+        total_cost = self.total_volume * self.avg_cost + price * volume
+        self.total_volume += volume
+        self.avg_cost = total_cost / self.total_volume
 
     def update_after_sell(self, price, volume):
         """
