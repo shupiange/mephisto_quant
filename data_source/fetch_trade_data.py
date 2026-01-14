@@ -136,7 +136,7 @@ def get_trade_minutes_data(bs_session, start_date, end_date, adjust_flag="2", fr
                     fields="date,time,code,open,high,low,close,volume,amount",
                     start_date=start_date,
                     end_date=end_date,
-                    frequency=frequency, 
+                    frequency=frequency, # 频率 30: 30分钟级数据, d: 天级别数据
                     adjustflag=adjust_flag  # 前复权  1: 后复权  2: 前复权  3: 不复权
                 ).get_data()
                 
