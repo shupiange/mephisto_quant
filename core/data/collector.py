@@ -146,7 +146,8 @@ class DataCollector:
             
             # 计算 time_rank
             code_df.loc[:, 'time_rank'] = code_df.groupby(['code', 'date'])['time'].rank()
-            
+            code_df.loc[:, 'time'] = code_df['time'].map(lambda x: x[:12])
+
             if os.path.exists(filepath):
                 try:
                     existing_df = pd.read_csv(filepath)
@@ -232,21 +233,28 @@ class DataCollector:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="批量下载和修复股票分钟线数据 (Baostock)")
-    parser.add_argument('--start_date', type=str, required=True, help="开始日期 (YYYY-MM-DD)")
-    parser.add_argument('--end_date', type=str, required=True, help="结束日期 (YYYY-MM-DD)")
-    parser.add_argument('--adjust_flag', type=str, default="2", help="1: hfq  2: qfq  3: 不复权")
-    parser.add_argument('--frequency', type=str, default="5", help="5: 5min  d: day")
+    parser.add_argument('--start-date', type=str, required=True, help="开始日期 (YYYY-MM-DD)")
+    parser.add_argument('--end-date', type=str, required=True, help="结束日期 (YYYY-MM-DD)")
+    parser.add_argument('--adjust-flag', type=str, default="2", help="1: hfq  2: qfq  3: 不复权")
+    parser.add_argument('--frequency', type=str, default="5", help="30: 30min  d: day")
     parser.add_argument('--fix', action='store_true', default=False, help="是否运行失败代码的修复模式")
-    parser.add_argument('--path', type=str, default='./dataset', help="数据保存目录")
+    parser.add_argument('--path', type=str, default='', help="数据保存目录")
     
     args = parser.parse_args()
     
+    path = DATASET_DIR if args.path == '' else args.path
+
+    from core.params.update_params import update_stock_code_list, update_trade_date, update_stock_info_detail_list
+    update_stock_code_list()
+    update_trade_date()
+    update_stock_info_detail_list()
+
     collector = DataCollector(
         start_date=args.start_date,
         end_date=args.end_date,
         adjust_flag=args.adjust_flag,
         frequency=args.frequency,
-        path=args.path
+        path=path
     )
     
     collector.run(is_fix=args.fix)
