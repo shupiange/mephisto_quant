@@ -1,0 +1,8 @@
+numpy
+pandas>=2.0.0
+akshare>=1.18.11
+pandas-ta-classic>=0.3.59
+matplotlib
+mplfinance
+pyyaml
+baostock

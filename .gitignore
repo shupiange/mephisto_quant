@@ -1,5 +1,4 @@
 nohup.out
-dataset/*
 message/*
 params/stock_code_list_bak.json
 params/stock_code_list.json
@@ -7,3 +6,36 @@ params/trade_date.json
 *.pyc
 __pycache__/
 test.ipynb
+
+# 
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS generated files
+.DS_Store
+
+# Virtual Environment
+venv/
+.venv/
+env/
+
+# Data and Logs
+/data/
+logs/
+*.csv
+*.hdf5
+*.sqlite
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*.png
+.trae
+
+# Project specific
+requirements.txt.bak
