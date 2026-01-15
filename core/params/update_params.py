@@ -1,6 +1,7 @@
-from utils.utils import json_load, json_save, dict_key_diff
-from utils.name_utils import transform_code_name
-from params.get_params import get_stock_code_list
+from core.utils.utils import json_load, json_save, dict_key_diff
+from core.utils.name_utils import transform_code_name
+from core.params.get_params import get_stock_code_list
+from core.config.work_config import PARAMS_DIR
 import datetime
 import time
 import pytz
@@ -10,7 +11,7 @@ import baostock as bs
 from tqdm import tqdm
 
 
-def update_stock_code_list(path='./params'):
+def update_stock_code_list(path=PARAMS_DIR):
     
     """更新股票代码参数文件"""
     
@@ -55,7 +56,7 @@ def update_stock_code_list(path='./params'):
     return
 
 
-def update_trade_date(path='./params'):
+def update_trade_date(path=PARAMS_DIR):
     
     """更新交易日期参数文件"""
 
@@ -104,7 +105,7 @@ def update_trade_date(path='./params'):
     return
 
 
-def update_stock_info_detail_list(path='./params'):
+def update_stock_info_detail_list(path=PARAMS_DIR):
     """更新股票基本信息及退市信息"""
     lg = bs.login()
     # 显示登陆返回信息
@@ -156,7 +157,7 @@ def update_stock_info_detail_list(path='./params'):
 
 
 
-def update_adjust_factor_params(start_date, end_date, path='./params'):
+def update_adjust_factor_params(start_date, end_date, path=PARAMS_DIR):
     
     """更新复权因子参数文件"""
     
