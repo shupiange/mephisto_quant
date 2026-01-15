@@ -41462,5 +41462,21 @@
     "outDate": "",
     "type": "1",
     "status": "1"
+  },
+  "603352": {
+    "code": "sh.603352",
+    "code_name": "至信股份",
+    "ipoDate": "2026-01-15",
+    "outDate": "",
+    "type": "1",
+    "status": "1"
+  },
+  "603402": {
+    "code": "sh.603402",
+    "code_name": "陕西旅游",
+    "ipoDate": "2026-01-06",
+    "outDate": "",
+    "type": "1",
+    "status": "1"
   }
 }
