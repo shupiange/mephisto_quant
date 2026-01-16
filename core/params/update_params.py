@@ -145,7 +145,8 @@ def update_stock_info_detail_list(path=PARAMS_DIR):
                     time.sleep(5)
                     continue
         else:
-            print(f'跳过无效代码: {code}')
+            pass
+            # print(f'跳过无效代码: {code}')
             
     json_save(f'{path}/stock_info_detail_list.json', stock_info_detail_list)
     print('Success Update Stock Info Detail List !')
