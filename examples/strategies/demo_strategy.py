@@ -27,7 +27,7 @@ class DemoStrategy(Strategy):
         price = bar_dict[code]['close']
         
         # 简单的择时逻辑
-        if '20250101' in ts and not self.invested:
+        if '2025-01-01' in ts and not self.invested:
             # 第一天有钱就买
             vol = 1000
             print(f"[{ts}] 信号触发：买入 {code} {vol}股 @ {price}")
@@ -38,7 +38,7 @@ class DemoStrategy(Strategy):
             else:
                 print(f"   失败: {msg}")
 
-        elif '20250103' in ts and self.invested:
+        elif '2025-01-03' in ts and self.invested:
             # 第三天卖出
             # 注意：由于是 T+1,第一天买入的第二天就可以卖,这里演示第三天卖
             pos = context.positions.get(code)
