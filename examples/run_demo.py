@@ -2,7 +2,7 @@
 import sys
 import os
 import pandas as pd
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 # 将项目根目录添加到 sys.path,确保能导入 core 模块
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -31,12 +31,9 @@ def run_demo():
         
         # 简单的日期筛选逻辑
         if start_date:
-            # start_date 可能是 '2025-01-01' 或 '20250101'
-            s_date = start_date.replace('-', '')
-            df = df[df['date'] >= s_date]
+            df = df[df['date'] >= start_date]
         if end_date:
-            e_date = end_date.replace('-', '')
-            df = df[df['date'] <= e_date]
+            df = df[df['date'] <= end_date]
             
         return df
 
@@ -46,14 +43,14 @@ def run_demo():
     # 我们需要 patch engine.py 中导入的那个 load_dataset 引用
     
     # 也可以直接 patch core.database.load_dataset.load_dataset,这样更通用
-    with patch('core.backtesting.engine.load_dataset', side_effect=mock_load_dataset):
+    with patch[MagicMock | AsyncMock]('core.backtesting.engine.load_dataset', side_effect=mock_load_dataset):
         print(">>> 开始运行 Demo 回测 (使用 CSV Mock 数据)...")
         
         # 3. 初始化回测引擎
         engine = BacktestEngine(
             strategy_cls=DemoStrategy,
-            start_date='20250101',
-            end_date='20250103',
+            start_date='2025-01-01',
+            end_date='2025-01-03',
             codes=['000001'],
             initial_cash=100000.0
         )

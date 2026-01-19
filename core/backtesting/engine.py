@@ -41,19 +41,10 @@ class BacktestEngine:
         date_str: 'YYYYMMDD'
         """
         print(f"Loading data for {date_str}...")
-        # 调用 load_dataset 获取当日数据
-        # 注意：load_dataset 的参数 start_date 和 end_date 格式可能需要适配
-        # 假设 load_dataset 内部 SQL 是按字符串比较,传入 'YYYYMMDD' 即可
-        # 如果 load_dataset 需要 'YYYY-MM-DD',需要转换
-        
-        # 转换日期格式适配 load_dataset (假设其支持 YYYY-MM-DD 或 YYYYMMDD,这里按原样尝试,如果需要转换再改)
-        # 根据 load_dataset.py 的注释,参数格式如 'YYYY-MM-DD',所以这里做一下转换
-        date_obj = datetime.strptime(date_str, "%Y%m%d")
-        query_date = date_obj.strftime("%Y-%m-%d") # 转换为带短横线的格式
         
         # 查询当日数据
         # 注意：load_dataset 如果 start_date=end_date,则只查那一天
-        df = load_dataset(self.codes, start_date=query_date, end_date=query_date, table_name='stock_data_30_minute', database_name='quant')
+        df = load_dataset(self.codes, start_date=date_str, end_date=date_str, table_name='stock_data_30_minute', database_name='quant')
         
         if df.empty:
             return None
