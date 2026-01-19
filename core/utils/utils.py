@@ -35,7 +35,7 @@ def dict_key_diff(dict1, dict2):
     
     only_in_dict1 = keys1 - keys2      # 只在 dict1 中的键
     only_in_dict2 = keys2 - keys1      # 只在 dict2 中的键
-    common_keys   = keys1 & keys2      # 两个字典都有的键（可选）
+    common_keys   = keys1 & keys2      # 两个字典都有的键(可选)
     
     return {
         'only_in_first': only_in_dict1,

@@ -3,7 +3,7 @@ import datetime
 
 def split_date_range(start_date_str: str, end_date_str: str, chunk_size_days: int = 30):
     """
-    将一个大的日期范围分割成小的、连续的日期块（默认为 30 天）。
+    将一个大的日期范围分割成小的、连续的日期块(默认为 30 天)。
 
     Args:
         start_date_str: 起始日期字符串 (YYYY-MM-DD)。

@@ -156,7 +156,7 @@ class DataCollector:
                     combined_df.to_csv(filepath, index=False)
                     print(f"成功更新/追加 {code} 的数据到 {filename}。")
                 except Exception as e:
-                    print(f"警告: 合并文件 {filepath} 失败 ({e})，将覆盖保存新获取的数据。")
+                    print(f"警告: 合并文件 {filepath} 失败 ({e}),将覆盖保存新获取的数据。")
                     code_df.to_csv(filepath, index=False)
             else:
                 code_df.to_csv(filepath, index=False)
@@ -169,7 +169,7 @@ class DataCollector:
         for i, (chunk_start, chunk_end) in enumerate(date_chunks, 1):
             print(f"\n[Chunk {i}/{len(date_chunks)}] 正在处理: {chunk_start} ~ {chunk_end}")
             
-            # 每次 chunk 重新登录，保持连接活跃
+            # 每次 chunk 重新登录,保持连接活跃
             lg = bs.login()
             if lg.error_code != '0':
                 print(f"Baostock login failed: {lg.error_msg}")
@@ -206,10 +206,10 @@ class DataCollector:
                 codes = json_load(fpath)
                 
                 if not isinstance(codes, list) or not codes:
-                    print(f"文件 {fname} 没有需要修复的代码，跳过。")
+                    print(f"文件 {fname} 没有需要修复的代码,跳过。")
                     continue
 
-                print(f"--- 修复文件 {fname}（范围 {file_start} ~ {file_end}): 尝试重新获取 {len(codes)} 个代码 ---")
+                print(f"--- 修复文件 {fname}(范围 {file_start} ~ {file_end}): 尝试重新获取 {len(codes)} 个代码 ---")
                 
                 newly_fetched_data, failed_list = self.fetch_data(file_start, file_end, code_list=codes, request_interval=0.3)
                 

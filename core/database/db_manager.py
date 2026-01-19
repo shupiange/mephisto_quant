@@ -8,7 +8,7 @@ from pandas import DataFrame
 
 class MySQLManager:
     """
-    一个通用的 MySQL 数据库管理器，支持上下文管理、
+    一个通用的 MySQL 数据库管理器,支持上下文管理、
     常规查询、批量插入以及从 CSV/Pandas DataFrame 导入数据。
     """
     def __init__(self, host, database, user, password, port=3306):
@@ -46,7 +46,7 @@ class MySQLManager:
             except Error as e:
                 print(f"连接数据库时发生错误: {e}")
                 self.conn = None # 确保连接失败时 self.conn 为 None
-                raise # 抛出异常，阻止后续操作
+                raise # 抛出异常,阻止后续操作
 
     def disconnect(self):
         """手动关闭数据库连接"""
@@ -66,7 +66,7 @@ class MySQLManager:
 
         Args:
             query (str): SQL SELECT 语句。
-            params (Tuple, optional): 查询参数（用于防止 SQL 注入）。
+            params (Tuple, optional): 查询参数(用于防止 SQL 注入)。
 
         Returns:
             List[Tuple]: 查询结果, 列表中的每个元素是一个元组 (row)。
@@ -113,7 +113,7 @@ class MySQLManager:
     
     def insert_many_data(self, table_name: str, data_list: List[Dict[str, Any]]):
         """
-        【改进】批量插入多条数据记录（来自字典列表）。
+        【改进】批量插入多条数据记录(来自字典列表)。
 
         Args:
             table_name (str): 目标表名。
@@ -127,7 +127,7 @@ class MySQLManager:
         
         # 改进点 1: 确保键的顺序是固定的
         first_record = data_list[0]
-        # 改进点 2: 使用反引号 (`) 来保护列名，防止是 SQL 关键字
+        # 改进点 2: 使用反引号 (`) 来保护列名,防止是 SQL 关键字
         keys_list = list(first_record.keys())
         keys_sql = ', '.join([f"`{k}`" for k in keys_list])
         
@@ -157,7 +157,7 @@ class MySQLManager:
     def insert_from_csv(self, table_name: str, file_path: str, encoding='utf-8'):
         """
         【新增】从 CSV 文件读取数据并批量插入数据库。
-        假设 CSV 的第一行是表头（列名），且与数据库列名匹配。
+        假设 CSV 的第一行是表头(列名),且与数据库列名匹配。
         
         Args:
             table_name (str): 目标表名。
@@ -193,7 +193,7 @@ class MySQLManager:
             df (DataFrame): Pandas DataFrame。
         """
         if pd is None:
-            print("错误：`insert_from_dataframe` 需要 'pandas' 库，请先安装。")
+            print("错误：`insert_from_dataframe` 需要 'pandas' 库,请先安装。")
             return
             
         if not isinstance(df, pd.DataFrame):
@@ -284,11 +284,11 @@ if __name__ == "__main__":
             
             # --- 示例 4：执行非查询 (UPDATE/DELETE) ---
             print("\n--- 开始执行非查询操作 ---")
-            # 比如，更新一条数据
+            # 比如,更新一条数据
             update_sql = f"UPDATE {TABLE_NAME} SET volume = %s WHERE code = %s AND date = %s"
             rows_affected = db.execute_non_query(update_sql, (12500, '600001', '2025-11-14'))
 
     except Error as e:
         print(f"数据库操作主流程发生严重错误: {e}")
     except ConnectionError as ce:
-        print(f"无法连接到数据库，请检查配置: {ce}")
+        print(f"无法连接到数据库,请检查配置: {ce}")

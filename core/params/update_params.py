@@ -130,7 +130,7 @@ def update_stock_info_detail_list(path=PARAMS_DIR):
                 try:
                     rs = bs.query_stock_basic(code=bs_code)
                     while (rs.error_code == '0') & rs.next():
-                        # 获取一条记录，将记录合并在一起
+                        # 获取一条记录,将记录合并在一起
                         record = rs.get_row_data()
                         """type: 证券类型, 其中1: 股票, 2: 指数, 3: 其它, 4: 可转债, 5: ETF"""
                         """status: 上市状态, 其中1: 上市, 0: 退市"""

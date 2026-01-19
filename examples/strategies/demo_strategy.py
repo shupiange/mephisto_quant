@@ -4,9 +4,9 @@ from core.backtesting.strategy_base import Strategy
 class DemoStrategy(Strategy):
     """
     一个简单的示例策略：
-    1. 第一天（20250101）：开盘买入
-    2. 第二天（20250102）：持仓不动
-    3. 第三天（20250103）：开盘卖出
+    1. 第一天(20250101)：开盘买入
+    2. 第二天(20250102)：持仓不动
+    3. 第三天(20250103)：开盘卖出
     """
     def initialize(self, context):
         print(">>> 策略初始化成功")
@@ -40,7 +40,7 @@ class DemoStrategy(Strategy):
 
         elif '20250103' in ts and self.invested:
             # 第三天卖出
-            # 注意：由于是 T+1，第一天买入的第二天就可以卖，这里演示第三天卖
+            # 注意：由于是 T+1,第一天买入的第二天就可以卖,这里演示第三天卖
             pos = context.positions.get(code)
             if pos and pos.available_volume > 0:
                 print(f"[{ts}] 信号触发：卖出 {code} {pos.available_volume}股 @ {price}")

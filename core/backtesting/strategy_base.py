@@ -9,7 +9,7 @@ class Context:
     def buy(self, code, volume, price=None):
         """
         买入接口
-        price: 如果为 None，使用当前收盘价/当前价
+        price: 如果为 None,使用当前收盘价/当前价
         """
         if price is None:
             price = self.current_prices.get(code)
@@ -42,14 +42,14 @@ class Context:
 class Strategy:
     def initialize(self, context):
         """
-        初始化策略，只执行一次
+        初始化策略,只执行一次
         """
         pass
 
     def on_bar(self, context, bar_dict):
         """
         每个时间步调用一次
-        bar_dict: {code: series/dict}，包含 open, close, high, low, volume, date 等
+        bar_dict: {code: series/dict},包含 open, close, high, low, volume, date 等
         """
         pass
 

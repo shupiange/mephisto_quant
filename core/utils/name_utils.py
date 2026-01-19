@@ -4,20 +4,20 @@ import re
 
 def transform_code_name(stock_code: str) -> tuple[str, bool]:
     """
-    根据中国 A 股的 6 位数字代码，返回其在 BaoStock 中使用的标准代码格式 (例如: sh.600519)。
+    根据中国 A 股的 6 位数字代码,返回其在 BaoStock 中使用的标准代码格式 (例如: sh.600519)。
 
     Args:
         stock_code: 6 位数字的股票代码字符串 (例如: "600519", "000001", "300750", "688981")。
 
     Returns:
-        BaoStock 标准代码字符串 (例如: "sh.600519")，如果代码格式不正确则返回原始代码。
+        BaoStock 标准代码字符串 (例如: "sh.600519"),如果代码格式不正确则返回原始代码。
     """
-    # 确保输入是字符串，并移除可能的空格
+    # 确保输入是字符串,并移除可能的空格
     code = str(stock_code).strip()
     
     # 检查代码长度和是否全为数字
     if not (len(code) == 6 and code.isdigit()):
-        print(f"警告: 股票代码 '{stock_code}' 格式不正确，应为 6 位数字。")
+        print(f"警告: 股票代码 '{stock_code}' 格式不正确,应为 6 位数字。")
         return code
 
     # 根据代码开头数字判断交易所

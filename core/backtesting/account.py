@@ -5,12 +5,12 @@ class Position:
         self.total_volume = initial_volume      # 总持仓
         self.available_volume = initial_volume  # 可卖持仓 (T+1规则)
         self.avg_cost = initial_price           # 持仓成本
-        self.frozen_volume = 0                  # 卖出冻结（已挂单未成交部分，如果是立即成交模式则不需要）
+        self.frozen_volume = 0                  # 卖出冻结(已挂单未成交部分,如果是立即成交模式则不需要)
 
     def on_buy(self, volume, price):
         """
         买入成交更新
-        如果余额不够，按照最多可买数量成交，且必须是100的整数倍
+        如果余额不够,按照最多可买数量成交,且必须是100的整数倍
         """
         if volume <= 0:
             return
@@ -24,7 +24,7 @@ class Position:
         total_cost = self.total_volume * self.avg_cost + volume * price
         self.total_volume += volume
         self.avg_cost = total_cost / self.total_volume
-        # available_volume 不变，等待结算
+        # available_volume 不变,等待结算
 
     def on_sell(self, volume, price):
         """
@@ -34,7 +34,7 @@ class Position:
         if volume <= 0:
             return
         
-        # 如果请求卖出量大于可卖量，则按可卖量成交
+        # 如果请求卖出量大于可卖量,则按可卖量成交
         if volume > self.available_volume:
             volume = self.available_volume
         
@@ -46,7 +46,7 @@ class Position:
             
     def settle(self):
         """
-        日终/日初结算，处理 T+1
+        日终/日初结算,处理 T+1
         """
         self.available_volume = self.total_volume
 
@@ -73,7 +73,7 @@ class Account:
 
         cost = price * volume
         commission = cost * self.commission_rate
-        # A股最低佣金通常是5元，这里暂简化
+        # A股最低佣金通常是5元,这里暂简化
         total_cost = cost + commission
 
         if self.cash < total_cost:

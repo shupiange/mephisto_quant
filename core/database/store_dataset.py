@@ -80,7 +80,7 @@ def store_dataset(dataset_path: str, table_name: str, database_name: dict):
                         pending_dfs = []
                         processed_files = []
 
-                # 3. 循环结束后，处理剩余不足 10000 个的文件（收尾）
+                # 3. 循环结束后,处理剩余不足 10000 个的文件(收尾)
                 if len(pending_dfs) > 0:
                     full_df = pd.concat(pending_dfs, ignore_index=True)
                     db.insert_from_dataframe(table_name, full_df)
@@ -97,7 +97,7 @@ def store_dataset(dataset_path: str, table_name: str, database_name: dict):
         print(f"数据库操作主流程发生严重错误: {e}")
 
     except ConnectionError as ce:
-        print(f"无法连接到数据库，请检查配置: {ce}")
+        print(f"无法连接到数据库,请检查配置: {ce}")
 
     except Exception as e:
         print(f"发生未知错误: {e}")
