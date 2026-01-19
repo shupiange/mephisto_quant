@@ -1,10 +1,10 @@
-from database.db_manager import MySQLManager
+from .db_manager import MySQLManager
 from mysql.connector import Error
 import pandas as pd
 import os
 import shutil
-from config.database_config import DATABASE_CONFIG
-from config.work_config import WORK_DIR
+from core.config.database_config import DATABASE_CONFIG
+from core.config.work_config import WORK_DIR
 import argparse
 
 
