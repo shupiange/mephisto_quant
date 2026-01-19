@@ -10,7 +10,13 @@ class Position:
     def on_buy(self, volume, price):
         """
         买入成交更新
+        如果余额不够，按照最多可买数量成交，且必须是100的整数倍
         """
+        if volume <= 0:
+            return
+        
+        # 必须是100的整数倍
+        volume = (volume // 100) * 100
         if volume <= 0:
             return
         
@@ -23,19 +29,21 @@ class Position:
     def on_sell(self, volume, price):
         """
         卖出成交更新
+        如果 volume 大于 available_volume,按照 available_volume 成交
         """
         if volume <= 0:
             return
         
+        # 如果请求卖出量大于可卖量，则按可卖量成交
         if volume > self.available_volume:
-            raise ValueError(f"Not enough available shares for {self.code}. Available: {self.available_volume}, Request: {volume}")
+            volume = self.available_volume
         
         self.total_volume -= volume
         self.available_volume -= volume
         
         if self.total_volume == 0:
             self.avg_cost = 0.0
-
+            
     def settle(self):
         """
         日终/日初结算，处理 T+1
@@ -43,7 +51,7 @@ class Position:
         self.available_volume = self.total_volume
 
 class Account:
-    def __init__(self, initial_cash=100000.0, commission_rate=0.0002):
+    def __init__(self, initial_cash=1000000.0, commission_rate=0.0002):
         self.cash = initial_cash
         self.initial_cash = initial_cash
         self.positions = {} # code -> Position
