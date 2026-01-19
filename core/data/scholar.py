@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+<<<<<<< HEAD
 import sys
 import os
 import argparse
@@ -296,3 +297,205 @@ if __name__ == "__main__":
         end_date=args.end_date
     )
     scholar.run()
+=======
+from typing import List, Union
+from core.database.load_dataset import load_dataset
+from core.database.db_manager import MySQLManager
+from core.config.database_config import DATABASE_CONFIG
+
+class Scholar:
+    def __init__(self):
+        self.db_config = DATABASE_CONFIG
+        self.table_name = 'stock_data_1_day_indicators'
+        self.source_table = 'stock_data_1_day'
+
+    def _get_db_manager(self):
+        return MySQLManager(
+            host=self.db_config['host'],
+            database=self.db_config['database'],
+            user=self.db_config['user'],
+            password=self.db_config['password']
+        )
+
+    def calculate_cci(self, df: pd.DataFrame, n: int = 14) -> pd.Series:
+        """
+        计算 CCI (Commodity Channel Index)
+        TP = (High + Low + Close) / 3
+        CCI = (TP - SMA(TP, N)) / (0.015 * MeanDeviation(TP, N))
+        """
+        tp = (df['high'] + df['low'] + df['close']) / 3
+        sma_tp = tp.rolling(window=n).mean()
+        # Mean Deviation = SMA(abs(TP - SMA_TP), N)
+        # Pandas rolling().mean() is SMA. 
+        # But standard Mean Deviation in CCI is mean(abs(TP - SMA_TP)) over the window?
+        # Actually it is mean(abs(x - mean(x)))
+        
+        def mad(x):
+            return np.mean(np.abs(x - np.mean(x)))
+            
+        # For efficiency, rolling apply is slower. 
+        # But standard CCI uses Mean Absolute Deviation.
+        md = tp.rolling(window=n).apply(mad, raw=True)
+        
+        cci = (tp - sma_tp) / (0.015 * md)
+        return cci
+
+    def calculate_mfi(self, df: pd.DataFrame, n: int = 14) -> pd.Series:
+        """
+        计算 MFI (Money Flow Index)
+        Typical Price = (High + Low + Close) / 3
+        Raw Money Flow = Typical Price * Volume
+        Money Ratio = Positive Money Flow / Negative Money Flow
+        MFI = 100 - 100 / (1 + Money Ratio)
+        """
+        tp = (df['high'] + df['low'] + df['close']) / 3
+        rmf = tp * df['volume']
+        
+        # Shift to compare with previous day
+        prev_tp = tp.shift(1)
+        
+        positive_flow = pd.Series(0.0, index=df.index)
+        negative_flow = pd.Series(0.0, index=df.index)
+        
+        positive_flow[tp > prev_tp] = rmf[tp > prev_tp]
+        negative_flow[tp < prev_tp] = rmf[tp < prev_tp]
+        
+        # Rolling sum over N periods
+        pos_mf_sum = positive_flow.rolling(window=n).sum()
+        neg_mf_sum = negative_flow.rolling(window=n).sum()
+        
+        # Avoid division by zero
+        mfi = 100 - 100 / (1 + pos_mf_sum / neg_mf_sum.replace(0, np.nan))
+        mfi = mfi.fillna(0) # Or handle appropriately
+        return mfi
+
+    def calculate_macd(self, df: pd.DataFrame, fast: int = 12, slow: int = 26, signal: int = 9) -> pd.DataFrame:
+        """
+        计算 MACD
+        DIF = EMA(Close, fast) - EMA(Close, slow)
+        DEA = EMA(DIF, signal)
+        MACD = (DIF - DEA) * 2
+        """
+        ema_fast = df['close'].ewm(span=fast, adjust=False).mean()
+        ema_slow = df['close'].ewm(span=slow, adjust=False).mean()
+        
+        dif = ema_fast - ema_slow
+        dea = dif.ewm(span=signal, adjust=False).mean()
+        macd_hist = (dif - dea) * 2
+        
+        return pd.DataFrame({
+            'macd': dif,
+            'macd_signal': dea,
+            'macd_hist': macd_hist
+        })
+
+    def calculate_kdj(self, df: pd.DataFrame, n: int = 9, m1: int = 3, m2: int = 3) -> pd.DataFrame:
+        """
+        计算 KDJ
+        RSV = (Close - LowestLow) / (HighestHigh - LowestLow) * 100
+        K = (M1-1)/M1 * PrevK + 1/M1 * RSV
+        D = (M2-1)/M2 * PrevD + 1/M2 * K
+        J = 3K - 2D
+        """
+        low_min = df['low'].rolling(window=n).min()
+        high_max = df['high'].rolling(window=n).max()
+        
+        rsv = (df['close'] - low_min) / (high_max - low_min) * 100
+        # Fill NaN with 50 or 0? Standard usually starts calculation after N days.
+        rsv = rsv.fillna(50)
+        
+        # Using ewm to simulate the recursive formula (M1-1)/M1 * Prev + 1/M1 * Curr
+        # alpha = 1/M1. com = 1/alpha - 1 = M1 - 1
+        k = rsv.ewm(alpha=1/m1, adjust=False).mean()
+        d = k.ewm(alpha=1/m2, adjust=False).mean()
+        j = 3 * k - 2 * d
+        
+        return pd.DataFrame({
+            'kdj_k': k,
+            'kdj_d': d,
+            'kdj_j': j
+        })
+
+    def process_one_code(self, df_code: pd.DataFrame) -> pd.DataFrame:
+        """
+        处理单个股票的数据，计算所有指标
+        """
+        # Ensure sorted by date
+        df_code = df_code.sort_values('date').copy()
+        
+        # Calculate Indicators
+        df_code['cci'] = self.calculate_cci(df_code)
+        df_code['mfi'] = self.calculate_mfi(df_code)
+        
+        macd_df = self.calculate_macd(df_code)
+        df_code = pd.concat([df_code, macd_df], axis=1)
+        
+        kdj_df = self.calculate_kdj(df_code)
+        df_code = pd.concat([df_code, kdj_df], axis=1)
+        
+        # Filter only result columns plus keys
+        result_cols = [
+            'date', 'code', 'cci', 'mfi', 
+            'macd', 'macd_signal', 'macd_hist', 
+            'kdj_k', 'kdj_d', 'kdj_j'
+        ]
+        
+        return df_code[result_cols]
+
+    def run(self, codes: Union[str, List[str]], start_date: str = None, end_date: str = None):
+        """
+        主运行方法：加载数据 -> 计算指标 -> 保存入库
+        """
+        print(f"正在加载数据: {codes} ({start_date} ~ {end_date})...")
+        df = load_dataset(codes, start_date=start_date, end_date=end_date, table_name=self.source_table)
+        
+        if df.empty:
+            print("未获取到数据。")
+            return
+
+        print("数据加载完成，开始计算指标...")
+        results = []
+        grouped = df.groupby('code')
+        
+        for code, group in grouped:
+            try:
+                processed_df = self.process_one_code(group)
+                # Drop rows with NaN (due to rolling windows)
+                processed_df = processed_df.dropna()
+                results.append(processed_df)
+            except Exception as e:
+                print(f"计算股票 {code} 指标时出错: {e}")
+
+        if not results:
+            print("没有可保存的指标数据。")
+            return
+
+        final_df = pd.concat(results, ignore_index=True)
+        
+        print(f"计算完成，准备保存 {len(final_df)} 条记录到表 {self.table_name}...")
+        
+        with self._get_db_manager() as db:
+            # Check if table exists, if not create it (Simple check)
+            # Or just rely on insert failing if not exists.
+            # Ideally we should use the DDL script logic, but here we just insert.
+            db.insert_from_dataframe(self.table_name, final_df)
+            
+        print("所有指标保存完成。")
+
+if __name__ == '__main__':
+    # Simple test case
+    scholar = Scholar()
+    # Example usage: update a specific stock
+    # scholar.run('sh.600519', start_date='2023-01-01', end_date='2023-12-31')
+    
+    import argparse
+    parser = argparse.ArgumentParser(description="计算并更新股票技术指标")
+    parser.add_argument('--codes', type=str, required=True, help="股票代码，逗号分隔")
+    parser.add_argument('--start-date', type=str, help="开始日期 YYYY-MM-DD")
+    parser.add_argument('--end-date', type=str, help="结束日期 YYYY-MM-DD")
+    
+    args = parser.parse_args()
+    
+    code_list = [c.strip() for c in args.codes.split(',')]
+    scholar.run(code_list, start_date=args.start_date, end_date=args.end_date)
+>>>>>>> 88f84e4 (fix)

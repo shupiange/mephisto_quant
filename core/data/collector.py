@@ -251,13 +251,27 @@ if __name__ == "__main__":
     update_trade_date()
     update_stock_info_detail_list()
 
-    collector = DataCollector(
-        start_date=args.start_date,
-        end_date=args.end_date,
-        adjust_flag=args.adjust_flag,
-        frequency=args.frequency,
-        path=path
-    )
+    if args.frequency == 'd' and args.adjust_flag == '2':
+        table_name = 'stock_data_1_day'
+        adjust_stock_list = update_adjust_factor_params(args.start_date, args.end_dat)
+        collector = DataCollector(
+            start_date=args.start_date,
+            end_date=args.end_date,
+            adjust_flag=args.adjust_flag,
+            frequency=args.frequency,
+            path=f'{path}/{table_name}'
+        )
+  
+    if args.frequency == '30' and args.adjust_flag == '1':
+        table_name = 'stock_data_30_minute'
+        collector = DataCollector(
+            start_date=args.start_date,
+            end_date=args.end_date,
+            adjust_flag=args.adjust_flag,
+            frequency=args.frequency,
+            path=f'{path}/{table_name}'
+        )
+    
     collector.run(is_fix=args.fix)
 
     # if args.adjust_flag == '2' and args.frequency == 'd':

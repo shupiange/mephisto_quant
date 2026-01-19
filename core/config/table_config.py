@@ -94,4 +94,22 @@ TABLE_FIELDS_CONFIG = {
         'boll_middle': float,
         'boll_lower': float
     },
+
+    # 日线级别股票指标表字段及其数据类型
+    'quant.stock_data_1_day_indicators_fields': [
+        'date', 'code', 'cci', 'mfi', 'macd', 'macd_signal', 'macd_hist', 
+        'kdj_k', 'kdj_d', 'kdj_j'
+    ],
+    'quant.stock_data_1_day_indicators': {
+        'date': str, 
+        'code': str, 
+        'cci': float, 
+        'mfi': float, 
+        'macd': float, 
+        'macd_signal': float, 
+        'macd_hist': float, 
+        'kdj_k': float,
+        'kdj_d': float,
+        'kdj_j': float
+    },
 }

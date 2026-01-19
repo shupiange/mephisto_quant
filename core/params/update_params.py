@@ -160,9 +160,8 @@ def update_stock_info_detail_list(path=PARAMS_DIR):
 
 def update_adjust_factor_params(start_date, end_date, path=PARAMS_DIR):
     
-    """更新复权因子参数文件，并输出有复权的股票代码"""
+    """更新复权因子参数文件，并返回该时间段内有复权的股票列表"""
     
-    current_date = datetime.datetime.now(pytz.timezone('Asia/Shanghai')).strftime('%Y-%m-%d')
     stock_codes = sorted(get_stock_code_list().keys())
     
     adjust_factorys = dict()
@@ -171,7 +170,7 @@ def update_adjust_factor_params(start_date, end_date, path=PARAMS_DIR):
     
     bs.login()
     change = False
-    adjusted_codes = []  # 用于保存有复权的股票代码
+    adjusted_stocks = []  # 记录有复权的股票
     
     for code in stock_codes:
         code_name, valid = transform_code_name(code)
@@ -183,19 +182,21 @@ def update_adjust_factor_params(start_date, end_date, path=PARAMS_DIR):
             end_date=end_date
         )
         
-        if (rs.error_code == '0') & rs.next():
-            change = True
-            adj_factor = {k: v for k, v in zip(rs.fields, rs.get_row_data())}
-            # 修正字典赋值逻辑
-            if code_name not in adjust_factorys:
-                adjust_factorys[code_name] = dict()
-            adjust_factorys[code_name][adj_factor['dividOperateDate']] = {
-                'foreAdjustFactor': adj_factor['foreAdjustFactor'], 
-                'backAdjustFactor': adj_factor['backAdjustFactor'], 
-                'adjustFactor': adj_factor['adjustFactor']
-            }
-            # 记录有复权的股票代码
-            adjusted_codes.append(code)
+        # 遍历所有复权记录
+        while (rs.error_code == '0') and rs.next():
+            adj_factor = dict(zip(rs.fields, rs.get_row_data()))
+            # 如果该日期在指定区间内，则视为有效复权
+            if adj_factor.get('dividOperateDate') and start_date <= adj_factor['dividOperateDate'] <= end_date:
+                if code not in adjusted_stocks:
+                    adjusted_stocks.append(code)
+                change = True
+                # 按日期嵌套存储
+                adjust_factorys.setdefault(code_name, dict())
+                adjust_factorys[code_name][adj_factor['dividOperateDate']] = {
+                    'foreAdjustFactor': adj_factor['foreAdjustFactor'],
+                    'backAdjustFactor': adj_factor['backAdjustFactor'],
+                    'adjustFactor': adj_factor['adjustFactor']
+                }
     
     bs.logout()
 
@@ -205,12 +206,9 @@ def update_adjust_factor_params(start_date, end_date, path=PARAMS_DIR):
         
         json_save(f'{path}/adjust_factor.json', adjust_factorys)
         print('Success Update Adjust Factor Params !')
+        print('该时间段内有复权的股票:', adjusted_stocks)
     
-    # 输出有复权的股票代码
-    if adjusted_codes:
-        print('有复权的股票代码:', adjusted_codes)
-    
-    return adjusted_codes
+    return adjusted_stocks
 
 
 
