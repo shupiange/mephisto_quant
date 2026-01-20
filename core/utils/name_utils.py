@@ -1,4 +1,4 @@
-from utils.utils import json_load
+from core.utils.utils import json_load
 
 import re
 

@@ -1,11 +1,8 @@
 nohup.out
 message/*
-params/stock_code_list_bak.json
-params/stock_code_list.json
-params/trade_date.json
 *.pyc
 __pycache__/
-test.ipynb
+*.ipynb
 
 # 
 

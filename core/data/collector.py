@@ -42,6 +42,7 @@ class DataCollector:
         self.frequency = frequency
         self.path = path
         self.failure_dir = failure_dir
+        self.fields = "date,code,open,close,high,low,volume,amount,turn" if self.frequency == "d" else "date,time,code,open,high,low,close,volume,amount"
         
         # 加载参数
         self.stock_info = get_stock_info_detail_list(PARAMS_DIR)
@@ -113,12 +114,10 @@ class DataCollector:
             try:
                 bs_code, ok = transform_code_name(code)
                 if ok:
-                    # 字段列表
-                    fields = "date,time,code,open,high,low,close,volume,amount"
                     # Baostock query
                     df_minute = bs.query_history_k_data_plus(
                         code=bs_code,
-                        fields=fields,
+                        fields=self.fields,
                         start_date=start_date,
                         end_date=end_date,
                         frequency=self.frequency,
@@ -145,14 +144,15 @@ class DataCollector:
             filepath = os.path.join(self.path, filename)
             
             # 计算 time_rank
-            code_df.loc[:, 'time_rank'] = code_df.groupby(['code', 'date'])['time'].rank()
-            code_df.loc[:, 'time'] = code_df['time'].map(lambda x: x[:12])
+            if self.frequency != "d":
+                code_df.loc[:, 'time_rank'] = code_df.groupby(['code', 'date'])['time'].rank()
+                code_df.loc[:, 'time'] = code_df['time'].map(lambda x: x[:12])
 
             if os.path.exists(filepath):
                 try:
                     existing_df = pd.read_csv(filepath)
                     combined_df = pd.concat([existing_df, code_df], ignore_index=True)
-                    combined_df.drop_duplicates(subset=['date', 'time', 'code'], keep='last', inplace=True)
+                    combined_df.drop_duplicates(subset=['date'] if self.frequency == "d" else ['date', 'time', 'code'], keep='last', inplace=True)
                     combined_df.to_csv(filepath, index=False)
                     print(f"成功更新/追加 {code} 的数据到 {filename}。")
                 except Exception as e:
@@ -242,7 +242,7 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    path = DATASET_DIR if args.path == '' else args.path
+    path = f'{DATASET_DIR}/{args.path}'
 
     from core.params.update_params import update_stock_code_list, update_trade_date, update_stock_info_detail_list
     update_stock_code_list()
