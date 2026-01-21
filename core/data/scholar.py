@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import sys
 import os
+import argparse
 
 # Ensure project root is in path
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -17,57 +18,17 @@ class Scholar:
     Scholar 用于计算股票技术指标并存入数据库。
     支持指标: MACD, KDJ, CCI, MFI
     """
-    def __init__(self):
+    def __init__(self, source_table='stock_data_1_day', target_table='stock_indicators_1_day'):
         self.db_config = DATABASE_CONFIG
-        
-        # Config keys
-        self.source_config_key = 'quant.stock_data_1_day'
-        self.target_config_key = 'quant.stock_indicators_1_day'
-        
-        # Physical table names (remove 'quant.' prefix if it exists in config but not in DB)
-        # Based on SHOW TABLES, existing tables don't have 'quant.' prefix.
-        self.source_table = 'stock_data_1_day'
-        self.target_table = 'stock_indicators_1_day'
-        
+                
+        # Physical table names
+        self.source_table = source_table
+        self.target_table = target_table
+
         self.fields_config = TABLE_FIELDS_CONFIG
 
     def _get_db_manager(self):
         return MySQLManager(**self.db_config)
-
-    def create_table(self):
-        """创建指标表"""
-        fields = self.fields_config.get(f'{self.target_config_key}_fields')
-        types = self.fields_config.get(self.target_config_key)
-        
-        if not fields or not types:
-            print(f"Error: Configuration for {self.target_config_key} not found.")
-            return
-
-        # Build CREATE TABLE statement
-        columns = []
-        for field in fields:
-            field_type = types.get(field)
-            sql_type = "VARCHAR(20)"
-            if field_type == float:
-                sql_type = "DOUBLE"
-            elif field_type == int:
-                sql_type = "BIGINT"
-            elif field == 'date':
-                sql_type = "DATE"
-            elif field == 'code':
-                sql_type = "VARCHAR(10)"
-            
-            columns.append(f"`{field}` {sql_type}")
-        
-        # Add primary key
-        columns.append("PRIMARY KEY (`date`, `code`)")
-        
-        create_sql = f"CREATE TABLE IF NOT EXISTS `{self.target_table}` ({', '.join(columns)}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
-        
-        with self._get_db_manager() as db:
-            print(f"Creating table {self.target_table}...")
-            db.execute_non_query(create_sql)
-            print("Table created successfully.")
 
     def get_stock_codes(self):
         """获取所有股票代码"""
@@ -77,12 +38,20 @@ class Scholar:
 
     def get_stock_data(self, code):
         """获取单个股票的历史数据"""
-        query = f"SELECT * FROM `{self.source_table}` WHERE code = %s ORDER BY date ASC"
         with self._get_db_manager() as db:
             # Get columns to create DataFrame
-            # Assuming we know the columns from config, but it's safer to rely on query order if we select *
-            # Or we can select specific columns.
-            source_fields = self.fields_config.get(f'{self.source_config_key}_fields')
+            config_key = f'quant.{self.source_table}'
+            source_fields = self.fields_config.get(f'{config_key}_fields')
+            if not source_fields:
+                print(f"Warning: No fields config found for {config_key}, using SELECT *")
+                query = f"SELECT * FROM `{self.source_table}` WHERE code = %s ORDER BY date ASC"
+                results = db.execute_query(query, (code,))
+                if not results:
+                    return pd.DataFrame()
+                # If we don't know columns, we can't easily make a DF with named columns needed for indicators.
+                # So we really need the config.
+                return pd.DataFrame(results) # Might lack column names
+
             cols_str = ", ".join(source_fields)
             query = f"SELECT {cols_str} FROM `{self.source_table}` WHERE code = %s ORDER BY date ASC"
             
@@ -172,7 +141,11 @@ class Scholar:
         if df.empty:
             return
 
-        target_fields = self.fields_config.get(f'{self.target_config_key}_fields')
+        config_key = f'quant.{self.target_table}'
+        target_fields = self.fields_config.get(f'{config_key}_fields')
+        if not target_fields:
+            print(f"Error: Target fields not found for {config_key}")
+            return
         
         # Prepare data for insertion
         # Only keep rows where we have valid indicators (drop NaNs from start)
@@ -207,15 +180,15 @@ class Scholar:
                     print(f"Error inserting batch: {e}")
 
     def run(self):
-        print("Starting indicator calculation...")
-        self.create_table()
+        print(f"Starting indicator calculation (Source: {self.source_table}, Target: {self.target_table})...")
+        # self.create_table() # Skip creation as DDL is handled externally
         
         codes = self.get_stock_codes()
         print(f"Found {len(codes)} stocks.")
         
         for i, code in enumerate(codes):
             try:
-                print(f"Processing {code} ({i+1}/{len(codes)})...")
+                # print(f"Processing {code} ({i+1}/{len(codes)})...")
                 df = self.get_stock_data(code)
                 if df.empty or len(df) < 2:
                     continue
@@ -230,6 +203,14 @@ class Scholar:
 
         print("Done.")
 
+
 if __name__ == "__main__":
-    scholar = Scholar()
+
+    parser = argparse.ArgumentParser(description='Calculate stock indicators and save to database.')
+    parser.add_argument('--source_table', type=str, default='stock_data_1_day', help='Source table name for stock data')
+    parser.add_argument('--target_table', type=str, default='stock_indicators_1_day', help='Target table name for indicators')
+    
+    args = parser.parse_args()
+    
+    scholar = Scholar(source_table=args.source_table, target_table=args.target_table)
     scholar.run()
