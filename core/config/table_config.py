@@ -53,4 +53,21 @@ TABLE_FIELDS_CONFIG = {
         'amount': float, 
         'turn': float, 
     },
+
+    # 日线级别股票指标表字段及其数据类型
+    'quant.stock_indicators_1_day_fields': [
+        'date', 'code', 'diff', 'dea', 'macd', 'k', 'd', 'j', 'cci', 'mfi'
+    ],
+    'quant.stock_indicators_1_day': {
+        'date': str, 
+        'code': str,
+        'diff': float,
+        'dea': float,
+        'macd': float,
+        'k': float,
+        'd': float,
+        'j': float,
+        'cci': float,
+        'mfi': float
+    },
 }

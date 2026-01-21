@@ -162,7 +162,7 @@ class DataCollector:
                 code_df.to_csv(filepath, index=False)
                 print(f"成功保存 {code} 的数据到 {filename}。")
 
-    def run_download(self, chunk_size_days=15):
+    def run_download(self, code_list=None, chunk_size_days=15):
         """运行分块下载模式"""
         date_chunks = split_date_range(self.start_date, self.end_date, chunk_size_days=chunk_size_days)
         
@@ -176,7 +176,7 @@ class DataCollector:
                 continue
 
             try:
-                all_data, failed_list = self.fetch_data(chunk_start, chunk_end, request_interval=0.3)
+                all_data, failed_list = self.fetch_data(chunk_start, chunk_end, code_list, request_interval=0.3)
                 self._update_failed_list(failed_list, chunk_start, chunk_end)
                 if all_data:
                     self.save_data(all_data, chunk_start, chunk_end)
@@ -225,11 +225,13 @@ class DataCollector:
         finally:
             bs.logout()
 
-    def run(self, is_fix=False):
+    def run(self, is_fix=False, code_list=None):
         if is_fix:
             self.run_fix()
         else:
-            self.run_download()
+            self.run_download(code_list=code_list)
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="批量下载和修复股票分钟线数据 (Baostock)")
@@ -244,7 +246,7 @@ if __name__ == "__main__":
     
     path = f'{DATASET_DIR}/{args.path}'
 
-    from core.params.update_params import update_stock_code_list, update_trade_date, update_stock_info_detail_list
+    from core.params.update_params import update_stock_code_list, update_trade_date, update_stock_info_detail_list, update_adjust_factor_params
     update_stock_code_list()
     update_trade_date()
     update_stock_info_detail_list()
@@ -256,5 +258,20 @@ if __name__ == "__main__":
         frequency=args.frequency,
         path=path
     )
-    
     collector.run(is_fix=args.fix)
+
+    if args.adjust_flag == '2' and args.frequency == 'd':
+        adjusted_codes = update_adjust_factor_params(args.start_date, args.end_date)
+        if len(adjusted_codes) > 0:
+            print(f"有 {len(adjusted_codes)} 个股票需要更新复权因子参数。")
+            collector = DataCollector(
+                start_date='2023-01-01',
+                end_date=args.start_date,
+                adjust_flag=args.adjust_flag,
+                frequency=args.frequency,
+                path=path
+            )
+            collector.run(code_list=adjusted_codes, is_fix=args.fix)
+
+
+    
