@@ -1,5 +1,4 @@
 from core.database.store_dataset import store_dataset
-
 from core.config.work_config import DATASET_DIR
 import argparse
 

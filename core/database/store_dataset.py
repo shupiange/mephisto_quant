@@ -1,12 +1,13 @@
-from database.db_manager import MySQLManager
+from core.database.db_manager import MySQLManager
 from mysql.connector import Error
 import pandas as pd
 import os
 import shutil
 import time
 from tqdm import tqdm
-from config.database_config import DATABASE_CONFIG
-from config.work_config import DATASET_DIR
+from core.config.database_config import DATABASE_CONFIG
+from core.config.work_config import DATASET_DIR
+from core.config.table_config import TABLE_FIELDS_CONFIG
 import argparse
 
 parser = argparse.ArgumentParser(description="存储数据集到 MySQL 数据库的脚本。")
@@ -30,7 +31,7 @@ def store_dataset(dataset_path: str, table_name: str, database_name: dict):
 
     # 2. 使用 'with' 语句自动管理连接
     try:
-        from config.table_config import TABLE_FIELDS_CONFIG
+        
         with MySQLManager(**DB_CONFIG) as db:
             
             if csv_file_path.endswith('.csv') and os.dir.exists(csv_file_path):
@@ -100,7 +101,7 @@ def store_dataset(dataset_path: str, table_name: str, database_name: dict):
         print(f"无法连接到数据库,请检查配置: {ce}")
 
     except Exception as e:
-        print(f"发生未知错误: {e}")
+        print(f"发生未知错误: {e} - file_path: {file_path}")
 
 
 

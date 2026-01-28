@@ -260,18 +260,19 @@ if __name__ == "__main__":
     )
     collector.run(is_fix=args.fix)
 
-    if args.adjust_flag == '2' and args.frequency == 'd':
-        adjusted_codes = update_adjust_factor_params(args.start_date, args.end_date)
-        if len(adjusted_codes) > 0:
-            print(f"有 {len(adjusted_codes)} 个股票需要更新复权因子参数。")
-            collector = DataCollector(
-                start_date='2023-01-01',
-                end_date=args.start_date,
-                adjust_flag=args.adjust_flag,
-                frequency=args.frequency,
-                path=path
-            )
-            collector.run(code_list=adjusted_codes, is_fix=args.fix)
+    # if args.adjust_flag == '2' and args.frequency == 'd':
+    #     adjusted_codes = update_adjust_factor_params(args.start_date, args.end_date)
+    #     if len(adjusted_codes) > 0:
+    #         print(f"有 {len(adjusted_codes)} 个股票需要更新复权因子参数。")
+    #         collector = DataCollector(
+    #             start_date='2023-01-01',
+    #             end_date=args.start_date,
+    #             adjust_flag=args.adjust_flag,
+    #             frequency=args.frequency,
+    #             path=path
+    #         )
+    #         collector.run(code_list=adjusted_codes, is_fix=args.fix)
 
 
+    
     
