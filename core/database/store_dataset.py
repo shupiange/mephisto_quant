@@ -64,7 +64,7 @@ def store_dataset(dataset_path: str, table_name: str, database_name: dict):
                 for file_path in tqdm(csv_files, desc='处理并聚合文件中:'):
                     # 1. 读取数据并加入缓存列表
                     df_c = pd.read_csv(file_path, dtype=TABLE_FIELDS_CONFIG[f'{database_name}.{table_name}'])
-                    pending_dfs.append(df_c)
+                    pending_dfs.append(df_c.dropna())
                     processed_files.append(file_path)
 
                     # 2. 检查是否达到 10000 个文件
