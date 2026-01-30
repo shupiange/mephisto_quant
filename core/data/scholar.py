@@ -134,6 +134,29 @@ class Scholar:
         mfi_ratio = pos_mf_sum / neg_mf_sum.replace(0, 1e-9)
         df['mfi'] = 100 - (100 / (1 + mfi_ratio))
 
+        # 5. Moving Averages (3, 5, 10, 20, 30, 60, 90)
+        ma_windows = [3, 5, 10, 20, 30, 60, 90]
+        for window in ma_windows:
+            df[f'ma{window}'] = df['close'].rolling(window=window).mean()
+
+        # 6. Bollinger Bands (20, 2)
+        # Middle Band = 20-day SMA
+        # Upper Band = Middle Band + (2 * 20-day Std Dev)
+        # Lower Band = Middle Band - (2 * 20-day Std Dev)
+        # We can reuse ma20 if available, but let's recalculate to be safe and independent
+        boll_window = 20
+        boll_std = 2
+        
+        # Calculate MA20 (Middle Band)
+        df['boll_middle'] = df['close'].rolling(window=boll_window).mean()
+        
+        # Calculate Standard Deviation
+        rolling_std = df['close'].rolling(window=boll_window).std()
+        
+        # Calculate Upper and Lower Bands
+        df['boll_upper'] = df['boll_middle'] + (boll_std * rolling_std)
+        df['boll_lower'] = df['boll_middle'] - (boll_std * rolling_std)
+
         return df
 
     def save_indicators(self, df):

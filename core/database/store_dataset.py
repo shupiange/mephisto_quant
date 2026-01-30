@@ -36,7 +36,8 @@ def store_dataset(dataset_path: str, table_name: str, database_name: dict):
             
             if csv_file_path.endswith('.csv') and os.dir.exists(csv_file_path):
                 print("\n--- 开始导入 DataFrame ---")
-                df_c = pd.read_csv(csv_file_path, dtype=TABLE_FIELDS_CONFIG[f'{database_name}.{table_name}'])
+                columns_dtype = TABLE_FIELDS_CONFIG[f'{database_name}.{table_name}']
+                df_c = pd.read_csv(csv_file_path).dropna().astype(columns_dtype)
                 db.insert_from_dataframe(table_name, df_c)
                 shutil.move(f'{DATASET_DIR}/{dataset_path}/{csv_file_path}', f'{DATASET_DIR}/{dataset_path}/archived/{csv_file_path}')
                 print("--- CSV 导入完成 ---")
@@ -50,20 +51,14 @@ def store_dataset(dataset_path: str, table_name: str, database_name: dict):
                     print(f"警告：目录 {csv_file_path} 中没有找到 CSV 文件。")
                     return
                 
-                # for file_path in tqdm(csv_files, desc='写入MySql中:'):
-                #     df_c = pd.read_csv(file_path, dtype=TABLE_FIELDS_CONFIG[f'{database_name}.{table_name}'])
-                #     db.insert_from_dataframe(table_name, df_c)
-                #     # print(f"已写入MySql: {file_path}")
-                #     shutil.move(file_path, f'{DATASET_DIR}/{dataset_path}/archived/{os.path.basename(file_path)}')
-                #     # print(f"已移动文件: {file_path}")
-                #     # time.sleep(0.1)
                 BATCH_SIZE = 10000
                 pending_dfs = []
                 processed_files = []
 
                 for file_path in tqdm(csv_files, desc='处理并聚合文件中:'):
                     # 1. 读取数据并加入缓存列表
-                    df_c = pd.read_csv(file_path, dtype=TABLE_FIELDS_CONFIG[f'{database_name}.{table_name}'])
+                    columns_dtype = TABLE_FIELDS_CONFIG[f'{database_name}.{table_name}']
+                    df_c = pd.read_csv(file_path).dropna().astype(columns_dtype)
                     pending_dfs.append(df_c.dropna())
                     processed_files.append(file_path)
 

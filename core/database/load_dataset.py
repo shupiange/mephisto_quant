@@ -56,6 +56,8 @@ def load_dataset(codes, start_date: str = None, end_date: str = None, table_name
         params = params + (end_date,)
 
     sql += " ORDER BY `date` ASC"
+    if '30_minute' in table_name:
+         sql += ", `time` ASC"
 
     # 执行查询并构造 DataFrame(带列名)
     try:

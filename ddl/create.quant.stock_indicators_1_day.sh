@@ -36,6 +36,20 @@ CREATE TABLE IF NOT EXISTS quant.stock_indicators_1_day (
     -- MFI指标
     mfi DECIMAL(20, 6)              COMMENT 'MFI指标',
 
+    -- 移动平均线 (MA)
+    ma3  DECIMAL(20, 6)             COMMENT '3日均线',
+    ma5  DECIMAL(20, 6)             COMMENT '5日均线',
+    ma10 DECIMAL(20, 6)             COMMENT '10日均线',
+    ma20 DECIMAL(20, 6)             COMMENT '20日均线',
+    ma30 DECIMAL(20, 6)             COMMENT '30日均线',
+    ma60 DECIMAL(20, 6)             COMMENT '60日均线',
+    ma90 DECIMAL(20, 6)             COMMENT '90日均线',
+
+    -- 布林通道 (Bollinger Bands)
+    boll_upper  DECIMAL(20, 6)      COMMENT '布林通道上轨',
+    boll_middle DECIMAL(20, 6)      COMMENT '布林通道中轨',
+    boll_lower  DECIMAL(20, 6)      COMMENT '布林通道下轨',
+
     -- 索引定义
     UNIQUE KEY uk_date_code (date, code),
     INDEX idx_date (date),

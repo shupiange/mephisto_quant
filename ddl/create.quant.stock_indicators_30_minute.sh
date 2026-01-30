@@ -39,6 +39,20 @@ CREATE TABLE IF NOT EXISTS quant.stock_indicators_30_minute (
     -- MFI指标
     mfi DECIMAL(20, 6)              COMMENT 'MFI指标',
 
+    -- 移动平均线 (MA)
+    ma3  DECIMAL(20, 6)             COMMENT '3个30分钟均线',
+    ma5  DECIMAL(20, 6)             COMMENT '5个30分钟均线',
+    ma10 DECIMAL(20, 6)             COMMENT '10个30分钟均线',
+    ma20 DECIMAL(20, 6)             COMMENT '20个30分钟均线',
+    ma30 DECIMAL(20, 6)             COMMENT '30个30分钟均线',
+    ma60 DECIMAL(20, 6)             COMMENT '60个30分钟均线',
+    ma90 DECIMAL(20, 6)             COMMENT '90个30分钟均线',
+
+    -- 布林通道 (Bollinger Bands)
+    boll_upper  DECIMAL(20, 6)      COMMENT '布林通道上轨',
+    boll_middle DECIMAL(20, 6)      COMMENT '布林通道中轨',
+    boll_lower  DECIMAL(20, 6)      COMMENT '布林通道下轨',
+
     -- 索引定义
     UNIQUE KEY uk_date_code_time (date, code, time),
     INDEX idx_date (date),
