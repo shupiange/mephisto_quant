@@ -192,7 +192,7 @@ class Scholar:
 
         return df
 
-    def save_indicators(self, df):
+    def save_indicators(self, df, auto_commit=True):
         """保存计算结果到数据库"""
         if df.empty:
             return
@@ -240,17 +240,22 @@ class Scholar:
             batch = values[i:i+batch_size]
             cursor = db.conn.cursor()
             cursor.executemany(insert_sql, batch)
-            db.conn.commit()
+            if auto_commit:
+                db.conn.commit()
             cursor.close()
 
     def run(self):
         print(f"Starting indicator calculation (Source: {self.source_table}, Target: {self.target_table})...")
-        # self.create_table() # Skip creation as DDL is handled externally
         
+        # Connect to DB once
         self.db_manager.connect()
+        
         try:
             codes = self.get_stock_codes()
             print(f"Found {len(codes)} stocks.")
+            
+            # Counter for batch commit
+            processed_count = 0
             
             for code in tqdm(codes, desc="Calculating Indicators"):
                 # print(f"Processing {code} ({i+1}/{len(codes)})...")
@@ -259,7 +264,15 @@ class Scholar:
                     continue
                 
                 df_indicators = self.calculate_indicators(df)
-                self.save_indicators(df_indicators)
+                self.save_indicators(df_indicators, auto_commit=False)
+                
+                processed_count += 1
+                if processed_count % 100 == 0:
+                    self.db_manager.conn.commit()
+            
+            # Final commit for remaining data
+            self.db_manager.conn.commit()
+            
         finally:
             self.db_manager.disconnect()
 
