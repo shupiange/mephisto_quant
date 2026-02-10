@@ -267,7 +267,7 @@ class Scholar:
                 self.save_indicators(df_indicators, auto_commit=False)
                 
                 processed_count += 1
-                if processed_count % 100 == 0:
+                if processed_count % 1000 == 0:
                     self.db_manager.conn.commit()
             
             # Final commit for remaining data
