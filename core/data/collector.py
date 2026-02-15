@@ -1,3 +1,4 @@
+from typing import Any
 import pandas as pd
 import numpy as np
 import baostock as bs
@@ -106,7 +107,7 @@ class DataCollector:
         if code_list is not None:
             desc = f"修复代码 ({start_date} ~ {end_date})"
 
-        for code in tqdm(target_codes, desc=desc):
+        for code in tqdm[Any](target_codes, desc=desc):
             if is_stock_on_trade(self.stock_info, code, start_date, end_date):
                 print(f"跳过未上市或已退市股票: {code}")
                 continue
@@ -242,7 +243,7 @@ if __name__ == "__main__":
     parser.add_argument('--frequency', type=str, default="5", help="30: 30min  d: day")
     parser.add_argument('--fix', action='store_true', default=False, help="是否运行失败代码的修复模式")
     parser.add_argument('--path', type=str, default='', help="数据保存目录")
-    parser.add_argument('--pre_adjust', type=bool, default=False, help="复权模式")
+    parser.add_argument('--pre-adjust', type=bool, default=False, help="复权模式")
 
     args = parser.parse_args()
     
@@ -254,27 +255,37 @@ if __name__ == "__main__":
     update_stock_info_detail_list()
 
 
-    if args.adjust_flag == '2' and args.frequency == 'd' and args.pre_adjust:
+    if args.adjust_flag == '2' and args.frequency == 'd' and args.pre_adjust and args.start_date != '2023-01-01':
         adjusted_codes = update_adjust_factor_params(args.start_date, args.end_date)
         if len(adjusted_codes) > 0:
             print(f"有 {len(adjusted_codes)} 个股票需要更新复权因子参数。")
             collector = DataCollector(
                 start_date='2023-01-01',
-                end_date=args.start_date,
+                end_date=args.end_date,  # 直接更新到本次任务的结束日期
                 adjust_flag=args.adjust_flag,
                 frequency=args.frequency,
                 path=path
             )
             collector.run(code_list=adjusted_codes, is_fix=args.fix)
+
+    # 无论是否进行了复权修复，都继续执行正常的数据下载任务
+    # 为了避免重复下载，从所有股票代码列表中剔除已经重跑过历史数据的复权股
+    all_stock_codes = sorted(list(get_stock_code_list().keys()))
+    if 'adjusted_codes' in locals() and len(adjusted_codes) > 0:
+        remaining_codes = [code for code in all_stock_codes if code not in adjusted_codes]
+        print(f"已剔除 {len(adjusted_codes)} 个复权股票，剩余 {len(remaining_codes)} 个股票待更新今日数据。")
     else:
-        collector = DataCollector(
-            start_date=args.start_date,
-            end_date=args.end_date,
-            adjust_flag=args.adjust_flag,
-            frequency=args.frequency,
-            path=path
-        )
-        collector.run(is_fix=args.fix)
+        remaining_codes = all_stock_codes
+
+    collector = DataCollector(
+        start_date=args.start_date,
+        end_date=args.end_date,
+        adjust_flag=args.adjust_flag,
+        frequency=args.frequency,
+        path=path
+    )
+    # 传入过滤后的 code_list
+    collector.run(is_fix=args.fix, code_list=remaining_codes)
 
 
 

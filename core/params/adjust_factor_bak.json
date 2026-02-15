@@ -589,7 +589,7 @@
   },
   "sz.000568": {
     "2025-01-24": {
-      "foreAdjustFactor": "0.953696",
+      "foreAdjustFactor": "0.964252",
       "backAdjustFactor": "27.891832",
       "adjustFactor": "27.891832"
     }
@@ -638,7 +638,7 @@
   },
   "sz.000596": {
     "2025-01-24": {
-      "foreAdjustFactor": "0.956656",
+      "foreAdjustFactor": "0.963969",
       "backAdjustFactor": "2.583861",
       "adjustFactor": "2.583861"
     }
@@ -858,11 +858,6 @@
       "foreAdjustFactor": "0.948283",
       "backAdjustFactor": "12.806762",
       "adjustFactor": "12.806762"
-    },
-    "2025-01-22": {
-      "foreAdjustFactor": "0.978044",
-      "backAdjustFactor": "13.208686",
-      "adjustFactor": "13.208686"
     }
   },
   "sz.000703": {
@@ -1546,7 +1541,7 @@
   },
   "sz.000960": {
     "2025-01-23": {
-      "foreAdjustFactor": "0.984172",
+      "foreAdjustFactor": "0.986534",
       "backAdjustFactor": "2.701816",
       "adjustFactor": "2.701816"
     }
@@ -1833,7 +1828,7 @@
   },
   "sz.001227": {
     "2025-01-24": {
-      "foreAdjustFactor": "0.960380",
+      "foreAdjustFactor": "0.980989",
       "backAdjustFactor": "1.135792",
       "adjustFactor": "1.135792"
     }
@@ -3422,7 +3417,7 @@
   },
   "sz.002246": {
     "2025-01-23": {
-      "foreAdjustFactor": "0.997659",
+      "foreAdjustFactor": "0.998632",
       "backAdjustFactor": "1.642472",
       "adjustFactor": "1.642472"
     }
@@ -7433,7 +7428,7 @@
   },
   "sz.300174": {
     "2025-01-22": {
-      "foreAdjustFactor": "0.986032",
+      "foreAdjustFactor": "0.991850",
       "backAdjustFactor": "3.901085",
       "adjustFactor": "3.901085"
     }
@@ -13033,7 +13028,7 @@
   },
   "sz.301429": {
     "2025-01-22": {
-      "foreAdjustFactor": "0.984837",
+      "foreAdjustFactor": "0.990919",
       "backAdjustFactor": "1.036434",
       "adjustFactor": "1.036434"
     }
@@ -13617,11 +13612,6 @@
       "foreAdjustFactor": "0.757252",
       "backAdjustFactor": "1.000000",
       "adjustFactor": "1.000000"
-    },
-    "2025-01-24": {
-      "foreAdjustFactor": "0.762084",
-      "backAdjustFactor": "1.006380",
-      "adjustFactor": "1.006380"
     }
   },
   "sz.301618": {
@@ -14347,7 +14337,7 @@
   },
   "sh.600153": {
     "2025-01-20": {
-      "foreAdjustFactor": "0.950364",
+      "foreAdjustFactor": "0.970414",
       "backAdjustFactor": "19.795046",
       "adjustFactor": "19.795046"
     }
@@ -14459,7 +14449,7 @@
   },
   "sh.600182": {
     "2025-01-24": {
-      "foreAdjustFactor": "0.947905",
+      "foreAdjustFactor": "0.965355",
       "backAdjustFactor": "1.235229",
       "adjustFactor": "1.235229"
     }
@@ -16342,7 +16332,7 @@
   },
   "sh.600755": {
     "2025-01-24": {
-      "foreAdjustFactor": "0.958493",
+      "foreAdjustFactor": "0.972756",
       "backAdjustFactor": "25.165514",
       "adjustFactor": "25.165514"
     }
@@ -16363,7 +16353,7 @@
   },
   "sh.600760": {
     "2025-01-20": {
-      "foreAdjustFactor": "0.992064",
+      "foreAdjustFactor": "0.994547",
       "backAdjustFactor": "7.556535",
       "adjustFactor": "7.556535"
     }
@@ -16874,7 +16864,7 @@
   },
   "sh.600900": {
     "2025-01-24": {
-      "foreAdjustFactor": "0.968057",
+      "foreAdjustFactor": "0.975796",
       "backAdjustFactor": "3.118790",
       "adjustFactor": "3.118790"
     }
@@ -18057,7 +18047,7 @@
   },
   "sh.601665": {
     "2025-01-23": {
-      "foreAdjustFactor": "0.959305",
+      "foreAdjustFactor": "0.978916",
       "backAdjustFactor": "1.199362",
       "adjustFactor": "1.199362"
     }
@@ -18239,7 +18229,7 @@
   },
   "sh.601818": {
     "2025-01-22": {
-      "foreAdjustFactor": "0.952018",
+      "foreAdjustFactor": "0.981132",
       "backAdjustFactor": "1.973511",
       "adjustFactor": "1.973511"
     }
@@ -18281,7 +18271,7 @@
   },
   "sh.601860": {
     "2025-01-22": {
-      "foreAdjustFactor": "0.965496",
+      "foreAdjustFactor": "0.983051",
       "backAdjustFactor": "1.214538",
       "adjustFactor": "1.214538"
     }
@@ -18330,7 +18320,7 @@
   },
   "sh.601878": {
     "2025-01-21": {
-      "foreAdjustFactor": "0.985304",
+      "foreAdjustFactor": "0.991823",
       "backAdjustFactor": "1.091697",
       "adjustFactor": "1.091697"
     }
@@ -19100,7 +19090,7 @@
   },
   "sh.603100": {
     "2025-01-23": {
-      "foreAdjustFactor": "0.974935",
+      "foreAdjustFactor": "0.986667",
       "backAdjustFactor": "1.596458",
       "adjustFactor": "1.596458"
     }
@@ -19380,7 +19370,7 @@
   },
   "sh.603162": {
     "2025-01-23": {
-      "foreAdjustFactor": "0.990073",
+      "foreAdjustFactor": "0.993734",
       "backAdjustFactor": "2.242145",
       "adjustFactor": "2.242145"
     }
@@ -21746,7 +21736,7 @@
   },
   "sh.603893": {
     "2025-01-21": {
-      "foreAdjustFactor": "0.994348",
+      "foreAdjustFactor": "0.995988",
       "backAdjustFactor": "1.026177",
       "adjustFactor": "1.026177"
     }
@@ -23125,7 +23115,7 @@
   },
   "sh.688102": {
     "2025-01-24": {
-      "foreAdjustFactor": "0.996118",
+      "foreAdjustFactor": "0.997065",
       "backAdjustFactor": "1.859209",
       "adjustFactor": "1.859209"
     }
@@ -23727,7 +23717,7 @@
   },
   "sh.688259": {
     "2025-01-24": {
-      "foreAdjustFactor": "0.994632",
+      "foreAdjustFactor": "0.998975",
       "backAdjustFactor": "1.424647",
       "adjustFactor": "1.424647"
     }
@@ -23797,7 +23787,7 @@
   },
   "sh.688281": {
     "2025-01-17": {
-      "foreAdjustFactor": "0.707713",
+      "foreAdjustFactor": "0.708165",
       "backAdjustFactor": "2.938964",
       "adjustFactor": "2.938964"
     }
@@ -25179,11 +25169,6 @@
       "foreAdjustFactor": "0.993033",
       "backAdjustFactor": "1.000000",
       "adjustFactor": "1.000000"
-    },
-    "2025-01-27": {
-      "foreAdjustFactor": "0.998217",
-      "backAdjustFactor": "1.005220",
-      "adjustFactor": "1.005220"
     }
   },
   "sh.688709": {

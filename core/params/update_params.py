@@ -162,7 +162,6 @@ def update_adjust_factor_params(start_date, end_date, path=PARAMS_DIR):
     
     """更新复权因子参数文件，并输出有复权的股票代码"""
     
-    current_date = datetime.datetime.now(pytz.timezone('Asia/Shanghai')).strftime('%Y-%m-%d')
     stock_codes = sorted(get_stock_code_list().keys())
     
     adjust_factorys = dict()
