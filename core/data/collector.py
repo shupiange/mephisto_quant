@@ -149,15 +149,16 @@ class DataCollector:
                 code_df.loc[:, 'time'] = code_df['time'].map(lambda x: x[:12])
 
             if os.path.exists(filepath):
-                try:
-                    existing_df = pd.read_csv(filepath)
-                    combined_df = pd.concat([existing_df, code_df], ignore_index=True)
-                    combined_df.drop_duplicates(subset=['date'] if self.frequency == "d" else ['date', 'time', 'code'], keep='last', inplace=True)
-                    combined_df.to_csv(filepath, index=False)
-                    print(f"成功更新/追加 {code} 的数据到 {filename}。")
-                except Exception as e:
-                    print(f"警告: 合并文件 {filepath} 失败 ({e}),将覆盖保存新获取的数据。")
-                    code_df.to_csv(filepath, index=False)
+                # try:
+                #     existing_df = pd.read_csv(filepath)
+                #     combined_df = pd.concat([existing_df, code_df], ignore_index=True)
+                #     combined_df.drop_duplicates(subset=['date'] if self.frequency == "d" else ['date', 'time', 'code'], keep='last', inplace=True)
+                #     combined_df.to_csv(filepath, index=False)
+                #     print(f"成功更新/追加 {code} 的数据到 {filename}。")
+                # except Exception as e:
+                #     print(f"警告: 合并文件 {filepath} 失败 ({e}),将覆盖保存新获取的数据。")
+                #     code_df.to_csv(filepath, index=False)
+                code_df.to_csv(filepath, index=False)
             else:
                 code_df.to_csv(filepath, index=False)
                 print(f"成功保存 {code} 的数据到 {filename}。")
@@ -241,7 +242,8 @@ if __name__ == "__main__":
     parser.add_argument('--frequency', type=str, default="5", help="30: 30min  d: day")
     parser.add_argument('--fix', action='store_true', default=False, help="是否运行失败代码的修复模式")
     parser.add_argument('--path', type=str, default='', help="数据保存目录")
-    
+    parser.add_argument('--pre_adjust', type=bool, default=False, help="复权模式")
+
     args = parser.parse_args()
     
     path = f'{DATASET_DIR}/{args.path}'
@@ -251,27 +253,29 @@ if __name__ == "__main__":
     update_trade_date()
     update_stock_info_detail_list()
 
-    collector = DataCollector(
-        start_date=args.start_date,
-        end_date=args.end_date,
-        adjust_flag=args.adjust_flag,
-        frequency=args.frequency,
-        path=path
-    )
-    collector.run(is_fix=args.fix)
 
-    # if args.adjust_flag == '2' and args.frequency == 'd':
-    #     adjusted_codes = update_adjust_factor_params(args.start_date, args.end_date)
-    #     if len(adjusted_codes) > 0:
-    #         print(f"有 {len(adjusted_codes)} 个股票需要更新复权因子参数。")
-    #         collector = DataCollector(
-    #             start_date='2023-01-01',
-    #             end_date=args.start_date,
-    #             adjust_flag=args.adjust_flag,
-    #             frequency=args.frequency,
-    #             path=path
-    #         )
-    #         collector.run(code_list=adjusted_codes, is_fix=args.fix)
+    if args.adjust_flag == '2' and args.frequency == 'd' and args.pre_adjust:
+        adjusted_codes = update_adjust_factor_params(args.start_date, args.end_date)
+        if len(adjusted_codes) > 0:
+            print(f"有 {len(adjusted_codes)} 个股票需要更新复权因子参数。")
+            collector = DataCollector(
+                start_date='2023-01-01',
+                end_date=args.start_date,
+                adjust_flag=args.adjust_flag,
+                frequency=args.frequency,
+                path=path
+            )
+            collector.run(code_list=adjusted_codes, is_fix=args.fix)
+    else:
+        collector = DataCollector(
+            start_date=args.start_date,
+            end_date=args.end_date,
+            adjust_flag=args.adjust_flag,
+            frequency=args.frequency,
+            path=path
+        )
+        collector.run(is_fix=args.fix)
+
 
 
     

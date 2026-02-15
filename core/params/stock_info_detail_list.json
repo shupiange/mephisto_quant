@@ -41478,5 +41478,61 @@
     "outDate": "",
     "type": "1",
     "status": "1"
+  },
+  "001220": {
+    "code": "sz.001220",
+    "code_name": "世盟股份",
+    "ipoDate": "2026-02-03",
+    "outDate": "",
+    "type": "1",
+    "status": "1"
+  },
+  "601112": {
+    "code": "sh.601112",
+    "code_name": "振石股份",
+    "ipoDate": "2026-01-29",
+    "outDate": "",
+    "type": "1",
+    "status": "1"
+  },
+  "603284": {
+    "code": "sh.603284",
+    "code_name": "林平发展",
+    "ipoDate": "2026-02-10",
+    "outDate": "",
+    "type": "1",
+    "status": "1"
+  },
+  "688712": {
+    "code": "sh.688712",
+    "code_name": "北芯生命",
+    "ipoDate": "2026-02-05",
+    "outDate": "",
+    "type": "1",
+    "status": "1"
+  },
+  "688785": {
+    "code": "sh.688785",
+    "code_name": "恒运昌",
+    "ipoDate": "2026-01-28",
+    "outDate": "",
+    "type": "1",
+    "status": "1"
+  },
+  "688816": {
+    "code": "sh.688816",
+    "code_name": "易思维",
+    "ipoDate": "2026-02-11",
+    "outDate": "",
+    "type": "1",
+    "status": "1"
+  },
+  "688818": {
+    "code": "sh.688818",
+    "code_name": "电科蓝天",
+    "ipoDate": "2026-02-10",
+    "outDate": "",
+    "type": "1",
+    "status": "1"
   }
 }
