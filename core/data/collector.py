@@ -107,7 +107,7 @@ class DataCollector:
         if code_list is not None:
             desc = f"修复代码 ({start_date} ~ {end_date})"
 
-        for code in tqdm[Any](target_codes, desc=desc):
+        for code in tqdm(target_codes, desc=desc):
             if is_stock_on_trade(self.stock_info, code, start_date, end_date):
                 print(f"跳过未上市或已退市股票: {code}")
                 continue
@@ -277,6 +277,9 @@ if __name__ == "__main__":
     else:
         remaining_codes = all_stock_codes
 
+    # 如果是全量下载（即从 2023-01-01 开始），且没有发生复权更新，则不需要再跑一遍
+    # 实际上如果 start_date 是 2023-01-01，上面的复权检查已经被跳过（args.start_date != '2023-01-01'），所以不会有问题
+    
     collector = DataCollector(
         start_date=args.start_date,
         end_date=args.end_date,

@@ -114,6 +114,7 @@ class MySQLManager:
     def insert_many_data(self, table_name: str, data_list: List[Dict[str, Any]]):
         """
         【改进】批量插入多条数据记录(来自字典列表)。
+        使用 REPLACE INTO 语句，如果存在主键/唯一键冲突，则先删除后插入（覆盖旧数据）。
 
         Args:
             table_name (str): 目标表名。
@@ -134,8 +135,8 @@ class MySQLManager:
         # 使用 %s 作为占位符
         placeholders = ', '.join(['%s'] * len(keys_list))
         
-        # 构造 SQL 语句
-        sql = f"INSERT INTO {table_name} ({keys_sql}) VALUES ({placeholders})"
+        # 构造 SQL 语句 - 使用 REPLACE INTO 替代 INSERT INTO
+        sql = f"REPLACE INTO {table_name} ({keys_sql}) VALUES ({placeholders})"
         
         # 改进点 3: 严格按照 keys_list 的顺序从每个字典中取值
         data_to_insert = [tuple(d[key] for key in keys_list) for d in data_list]
@@ -145,7 +146,7 @@ class MySQLManager:
             # 使用 executemany 进行高效批量写入
             cursor.executemany(sql, data_to_insert)
             self.conn.commit()
-            print(f"批量写入 {table_name} 成功：共插入 {cursor.rowcount} 行数据。")
+            print(f"批量写入 {table_name} 成功：共插入/替换 {cursor.rowcount} 行数据。")
         
         except Error as e:
             self.conn.rollback()

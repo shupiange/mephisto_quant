@@ -14,11 +14,11 @@ fi
 MODE=$1
 
 # 根据模式设置参数
-if [ "$MODE" == "daily" ]; then
+if [ "$MODE" = "daily" ]; then
     DATASET_PATH="daily_1_data"
     TABLE_NAME="stock_data_1_day"
     DATABASE_NAME="quant"
-elif [ "$MODE" == "30m" ]; then
+elif [ "$MODE" = "30m" ]; then
     DATASET_PATH="minutes_30_data"
     TABLE_NAME="stock_data_30_minute"
     DATABASE_NAME="quant"

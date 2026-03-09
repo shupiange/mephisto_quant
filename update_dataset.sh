@@ -28,7 +28,7 @@ if [ -z "$END_DATE" ]; then
 fi
 
 # 根据模式设置参数
-if [ "$MODE" == "daily" ]; then
+if [ "$MODE" = "daily" ]; then
     # 日线数据：前复权(2)，频率 d，路径 daily_1_data，开启复权检测(pre-adjust)
     ADJUST_FLAG="2"
     FREQUENCY="d"
@@ -39,7 +39,7 @@ if [ "$MODE" == "daily" ]; then
     SOURCE_TABLE="stock_data_1_day"
     TARGET_TABLE="stock_indicators_1_day"
     
-elif [ "$MODE" == "30m" ]; then
+elif [ "$MODE" = "30m" ]; then
     # 30分钟线数据：后复权(1)，频率 30，路径 minutes_30_data，不检测复权
     ADJUST_FLAG="1"
     FREQUENCY="30"
@@ -77,9 +77,26 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# 2. 运行指标计算
+# 2. 将 CSV 数据导入数据库
 echo "==================================================="
-echo "Step 2: Updating Indicators ($MODE)"
+echo "Step 2: Importing Data to Database ($MODE)"
+echo "Dataset: $PATH_NAME -> Table: $SOURCE_TABLE"
+echo "==================================================="
+
+CMD_DB_IMPORT="$PROJECT_ROOT/update_database.sh $MODE"
+
+echo "Executing: $CMD_DB_IMPORT"
+$CMD_DB_IMPORT
+
+# 检查上一步是否成功
+if [ $? -ne 0 ]; then
+    echo "Error: Database import failed. Aborting indicator update."
+    exit 1
+fi
+
+# 3. 运行指标计算
+echo "==================================================="
+echo "Step 3: Updating Indicators ($MODE)"
 echo "Source: $SOURCE_TABLE -> Target: $TARGET_TABLE"
 echo "==================================================="
 
