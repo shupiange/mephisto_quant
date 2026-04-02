@@ -6,18 +6,20 @@ from core.backtesting.account import Account
 from core.backtesting.strategy_base import Context
 
 class BacktestEngine:
-    def __init__(self, strategy_cls, codes, start_date, end_date, initial_cash=100000.0):
+    def __init__(self, strategy_cls, codes, start_date, end_date, initial_cash=100000.0, risk_manager=None):
         """
         初始化回测引擎
         start_date: 'YYYYMMDD' 格式
         end_date: 'YYYYMMDD' 格式
+        risk_manager: RiskManager 实例 (可选)
         """
         self.strategy_cls = strategy_cls
         self.codes = codes
         self.start_date = str(start_date)
         self.end_date = str(end_date)
         self.account = Account(initial_cash)
-        self.context = Context(self.account, self)
+        self.risk_manager = risk_manager
+        self.context = Context(self.account, self, risk_manager=risk_manager)
         
     def _generate_date_range(self):
         """
@@ -84,10 +86,21 @@ class BacktestEngine:
         for current_date in date_range:
             # 每日开盘前：T+1 结算
             self.account.settle()
+            self.account.current_date = current_date
             
             # 调用每日开始回调
             strategy.on_day_start(self.context, current_date)
-            
+
+            # 风控每日检查（止损/止盈/回撤熔断等）
+            if self.risk_manager:
+                actions = self.risk_manager.daily_check(self.context)
+                for action in actions:
+                    if action['action'] == 'FORCE_SELL':
+                        price = self.context.current_prices.get(action['code'])
+                        if price:
+                            print(f"[风控] {action['reason']}")
+                            self.account.sell(action['code'], price, action['volume'])
+
             # 3. 按需加载当日数据
             daily_df = self.load_daily_data(current_date)
             
@@ -103,6 +116,7 @@ class BacktestEngine:
             
             for ts, group in grouped:
                 self.context.current_time = ts
+                self.account.current_time = ts
                 
                 bar_dict = {}
                 current_prices = {}
@@ -132,4 +146,4 @@ class BacktestEngine:
                 'cash': self.account.cash
             })
 
-        return pd.DataFrame(history)
+        return pd.DataFrame(history), self.account.trade_logger.to_dataframe()

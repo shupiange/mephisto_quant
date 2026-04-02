@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# 要创建的数据库和表名
+DATABASE_NAME="quant"
+TABLE_NAME="stock_data_1_day_hfq"
+
+MYSQL_CMD="sudo mysql"
+
+echo "开始创建数据库和表..."
+
+# SQL命令
+SQL_COMMAND="
+CREATE TABLE IF NOT EXISTS quant.stock_data_1_day_hfq (
+    -- 主键
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+
+    -- 交易日期,使用 CHAR(10) 存储
+    date CHAR(10) NOT NULL          COMMENT '交易日期 (YYYY-MM-DD)',
+
+    -- 证券代码
+    code VARCHAR(15) NOT NULL       COMMENT '证券代码 (例如 sh.600519)',
+
+    -- 开盘价
+    open DECIMAL(20, 2)             COMMENT '开盘价(后复权)',
+
+    -- 收盘价
+    close DECIMAL(20, 2)            COMMENT '收盘价(后复权)',
+
+    -- 最高价
+    high DECIMAL(20, 2)             COMMENT '最高价(后复权)',
+
+    -- 最低价
+    low DECIMAL(20, 2)              COMMENT '最低价(后复权)',
+
+    -- 成交量(单位：股)
+    volume BIGINT                   COMMENT '成交量',
+
+    -- 成交额
+    amount DECIMAL(20, 4)           COMMENT '成交额',
+
+    -- 换手率(百分比,0-100之间,从30分钟数据聚合时为NULL)
+    turn  DECIMAL(10, 4)            COMMENT '换手率',
+
+    -- 索引定义
+    UNIQUE KEY uk_date_code (date, code),
+    INDEX idx_date (date),
+    INDEX idx_code (code)
+);
+"
+
+# 执行SQL命令
+if echo "$SQL_COMMAND" | $MYSQL_CMD; then
+    echo "数据库 '$DATABASE_NAME' 和表 '$TABLE_NAME' 创建成功！"
+else
+    echo "错误: 执行SQL命令失败。"
+    exit 1
+fi
+
+echo "脚本执行完成。"

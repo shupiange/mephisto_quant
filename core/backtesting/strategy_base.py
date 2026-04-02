@@ -1,8 +1,9 @@
 
 class Context:
-    def __init__(self, account, engine):
+    def __init__(self, account, engine, risk_manager=None):
         self.account = account
         self.engine = engine
+        self.risk_manager = risk_manager
         self.current_time = None
         self.current_prices = {} # {code: price}
 
@@ -13,10 +14,18 @@ class Context:
         """
         if price is None:
             price = self.current_prices.get(code)
-        
+
         if price is None:
             return False, f"No price available for {code}"
-            
+
+        if self.risk_manager:
+            approved, adjusted_volume, reason = self.risk_manager.check_order(
+                code, 'BUY', volume, price, self
+            )
+            if not approved:
+                return False, reason
+            volume = adjusted_volume
+
         return self.account.buy(code, price, volume)
 
     def sell(self, code, volume, price=None):
@@ -25,10 +34,18 @@ class Context:
         """
         if price is None:
             price = self.current_prices.get(code)
-            
+
         if price is None:
             return False, f"No price available for {code}"
-            
+
+        if self.risk_manager:
+            approved, adjusted_volume, reason = self.risk_manager.check_order(
+                code, 'SELL', volume, price, self
+            )
+            if not approved:
+                return False, reason
+            volume = adjusted_volume
+
         return self.account.sell(code, price, volume)
 
     @property

@@ -1,3 +1,5 @@
+from core.backtesting.trade_log import TradeLogger
+
 
 class Position:
     def __init__(self, code, initial_volume=0, initial_price=0.0):
@@ -57,6 +59,9 @@ class Account:
         self.positions = {} # code -> Position
         self.commission_rate = commission_rate
         self.total_value = initial_cash
+        self.trade_logger = TradeLogger()
+        self.current_time = None   # 由 engine 每个 Bar 设置
+        self.current_date = None   # 由 engine 每日设置
 
     def get_position(self, code):
         if code not in self.positions:
@@ -79,9 +84,25 @@ class Account:
         if self.cash < total_cost:
             return False, f"Not enough cash. Need {total_cost:.2f}, Have {self.cash:.2f}"
 
+        cash_before = self.cash
         pos = self.get_position(code)
         pos.on_buy(volume, price)
         self.cash -= total_cost
+
+        self.trade_logger.log_trade(
+            timestamp=self.current_time,
+            date=self.current_date,
+            code=code,
+            direction='BUY',
+            price=price,
+            volume=volume,
+            commission=commission,
+            cash_before=cash_before,
+            cash_after=self.cash,
+            position_volume_after=pos.total_volume,
+            avg_cost_after=pos.avg_cost,
+        )
+
         return True, "Buy success"
 
     def sell(self, code, price, volume):
@@ -104,16 +125,35 @@ class Account:
         # 印花税等暂忽略或包含在 commission 中
         net_revenue = revenue - commission
 
+        cash_before = self.cash
+
         try:
             pos.on_sell(volume, price)
         except ValueError as e:
             return False, str(e)
-            
+
         self.cash += net_revenue
-        
+
+        pos_volume_after = pos.total_volume
+        pos_avg_cost_after = pos.avg_cost
+
         if pos.total_volume == 0:
             del self.positions[code]
-            
+
+        self.trade_logger.log_trade(
+            timestamp=self.current_time,
+            date=self.current_date,
+            code=code,
+            direction='SELL',
+            price=price,
+            volume=volume,
+            commission=commission,
+            cash_before=cash_before,
+            cash_after=self.cash,
+            position_volume_after=pos_volume_after,
+            avg_cost_after=pos_avg_cost_after,
+        )
+
         return True, "Sell success"
 
     def settle(self):

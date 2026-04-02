@@ -45,10 +45,16 @@ elif [ "$MODE" = "30m" ]; then
     FREQUENCY="30"
     PATH_NAME="minutes_30_data"
     PRE_ADJUST=""
-    
-    # 指标更新相关参数
+
+    # 指标更新相关参数（30分钟级别）
     SOURCE_TABLE="stock_data_30_minute"
     TARGET_TABLE="stock_indicators_30_minute"
+
+    # 聚合后的日线后复权相关参数
+    HFQ_DAILY_SOURCE_TABLE="stock_data_30_minute"
+    HFQ_DAILY_TARGET_TABLE="stock_data_1_day_hfq"
+    HFQ_DAILY_INDICATOR_SOURCE="stock_data_1_day_hfq"
+    HFQ_DAILY_INDICATOR_TARGET="stock_indicators_1_day_hfq"
 else
     echo "Error: Invalid mode '$MODE'. Please use 'daily' or '30m'."
     exit 1
@@ -94,9 +100,51 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# 3. 运行指标计算
+# 3. (仅30m模式) 聚合30分钟后复权数据为日线后复权数据
+if [ "$MODE" = "30m" ]; then
+    echo "==================================================="
+    echo "Step 3: Aggregating 30m -> Daily Back-Adjusted (hfq)"
+    echo "Source: $HFQ_DAILY_SOURCE_TABLE -> Target: $HFQ_DAILY_TARGET_TABLE"
+    echo "==================================================="
+
+    CMD_AGGREGATE="python3 $PROJECT_ROOT/core/data/aggregator.py \
+        --source-table $HFQ_DAILY_SOURCE_TABLE \
+        --target-table $HFQ_DAILY_TARGET_TABLE \
+        --start-date $START_DATE \
+        --end-date $END_DATE"
+
+    echo "Executing: $CMD_AGGREGATE"
+    $CMD_AGGREGATE
+
+    if [ $? -ne 0 ]; then
+        echo "Error: Aggregation failed. Aborting."
+        exit 1
+    fi
+
+    # 4. (仅30m模式) 计算日线后复权指标
+    echo "==================================================="
+    echo "Step 4: Updating Daily Back-Adjusted Indicators (hfq)"
+    echo "Source: $HFQ_DAILY_INDICATOR_SOURCE -> Target: $HFQ_DAILY_INDICATOR_TARGET"
+    echo "==================================================="
+
+    CMD_HFQ_INDICATORS="python3 $PROJECT_ROOT/core/data/scholar.py \
+        --source-table $HFQ_DAILY_INDICATOR_SOURCE \
+        --target-table $HFQ_DAILY_INDICATOR_TARGET \
+        --start-date $START_DATE \
+        --end-date $END_DATE"
+
+    echo "Executing: $CMD_HFQ_INDICATORS"
+    $CMD_HFQ_INDICATORS
+
+    if [ $? -ne 0 ]; then
+        echo "Error: Daily hfq indicator calculation failed. Aborting."
+        exit 1
+    fi
+fi
+
+# 5. 运行30分钟/日线指标计算
 echo "==================================================="
-echo "Step 3: Updating Indicators ($MODE)"
+echo "Step 5: Updating Indicators ($MODE)"
 echo "Source: $SOURCE_TABLE -> Target: $TARGET_TABLE"
 echo "==================================================="
 
