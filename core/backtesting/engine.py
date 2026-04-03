@@ -6,12 +6,16 @@ from core.backtesting.account import Account
 from core.backtesting.strategy_base import Context
 
 class BacktestEngine:
-    def __init__(self, strategy_cls, codes, start_date, end_date, initial_cash=100000.0, risk_manager=None):
+    def __init__(self, strategy_cls, codes, start_date, end_date,
+                 initial_cash=100000.0, risk_manager=None,
+                 table_name='stock_data_30_minute', indicator_table=None):
         """
         初始化回测引擎
         start_date: 'YYYYMMDD' 格式
         end_date: 'YYYYMMDD' 格式
         risk_manager: RiskManager 实例 (可选)
+        table_name: 行情数据表 (默认 stock_data_30_minute，日线用 stock_data_1_day_hfq)
+        indicator_table: 指标表 (可选，设置后自动 merge 到行情数据)
         """
         self.strategy_cls = strategy_cls
         self.codes = codes
@@ -20,6 +24,8 @@ class BacktestEngine:
         self.account = Account(initial_cash)
         self.risk_manager = risk_manager
         self.context = Context(self.account, self, risk_manager=risk_manager)
+        self.table_name = table_name
+        self.indicator_table = indicator_table
         
     def _generate_date_range(self):
         """
@@ -42,33 +48,49 @@ class BacktestEngine:
         加载指定日期的数据
         date_str: 'YYYYMMDD'
         """
-        print(f"Loading data for {date_str}...")
-        
-        # 查询当日数据
-        # 注意：load_dataset 如果 start_date=end_date,则只查那一天
-        df = load_dataset(self.codes, start_date=date_str, end_date=date_str, table_name='stock_data_30_minute', database_name='quant')
-        
+        # 将 YYYYMMDD 转为 YYYY-MM-DD 以匹配数据库格式
+        if len(date_str) == 8 and '-' not in date_str:
+            query_date = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:8]}"
+        else:
+            query_date = date_str
+
+        df = load_dataset(self.codes, start_date=query_date, end_date=query_date,
+                          table_name=self.table_name, database_name='quant')
+
         if df.empty:
             return None
-            
-        # 确保 code 是字符串
+
         df['code'] = df['code'].astype(str)
-        
-        # 根据用户需求：date格式是YYYYMMDD, time格式是YYYYMMDDHHMMSSmmm
-        # 我们需要按 time 排序 (time 包含了日期和时间信息)
-        # 假设数据库返回的字段里有 'date' 和 'time'
-        # 根据 table_config.py,30分钟线表里有 'date' (str), 'time' (int 比如 930)
-        # 但用户描述 "time的格式是YYYYMMDDHHMMSSmmm",这可能与 table_config 不一致
-        # 我们先检查 DataFrame 列名,适配处理
-        
-        # 假设数据库返回的 'date' 是 'YYYY-MM-DD' 格式 (SQL date类型) 或者 'YYYYMMDD'
-        # 如果 'time' 是 930 这种 int,我们需要构造完整的 timestamp 用于排序
-        
-        # 尝试判断 time 列的格式
-        # Case 1: time 是完整的时间戳字符串 (YYYYMMDDHHMMSSmmm)
-        # Case 2: time 是 int (HHMM)
-                     
-        df = df.sort_values('time')
+
+        # 将 Decimal 类型的数值列转为 float（MySQL 的 DECIMAL 类型返回 Python Decimal）
+        numeric_cols = ['open', 'close', 'high', 'low', 'amount', 'turn',
+                        'diff', 'dea', 'macd', 'k', 'd', 'j', 'cci', 'mfi',
+                        'ma3', 'ma5', 'ma10', 'ma20', 'ma30', 'ma60', 'ma90',
+                        'boll_upper', 'boll_middle', 'boll_lower']
+        for col in numeric_cols:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors='coerce')
+
+        # 如果指定了指标表，merge 指标数据
+        if self.indicator_table:
+            ind_df = load_dataset(self.codes, start_date=query_date, end_date=query_date,
+                                  table_name=self.indicator_table, database_name='quant')
+            if not ind_df.empty:
+                ind_df['code'] = ind_df['code'].astype(str)
+                # 去掉指标表中与行情表重复的列（date, code, id 等），保留指标列
+                merge_on = ['date', 'code']
+                if 'time' in df.columns and 'time' in ind_df.columns:
+                    merge_on.append('time')
+                drop_cols = [c for c in ind_df.columns
+                             if c in df.columns and c not in merge_on]
+                ind_df = ind_df.drop(columns=drop_cols, errors='ignore')
+                df = df.merge(ind_df, on=merge_on, how='left')
+
+        if 'time' in df.columns:
+            df = df.sort_values('time')
+        else:
+            df = df.sort_values('code')
+
         return df
 
     def run(self):
@@ -111,9 +133,13 @@ class BacktestEngine:
             last_date = current_date
             
             # 按时间步(Bar)迭代当日数据
-            # 我们可以按 _timestamp 分组,处理同一时刻多个股票的数据
-            grouped = daily_df.groupby('time')
-            
+            # 日线模式：无 time 列，整天作为一个 bar
+            # 30分钟模式：按 time 分组，每个时间步一个 bar
+            if 'time' in daily_df.columns:
+                grouped = daily_df.groupby('time')
+            else:
+                grouped = [('daily', daily_df)]
+
             for ts, group in grouped:
                 self.context.current_time = ts
                 self.account.current_time = ts

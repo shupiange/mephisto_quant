@@ -4,7 +4,7 @@
 
 ## 项目简介
 
-Mephisto Quant 是一个面向中国 A 股市场的量化交易数据系统，覆盖约 5,000 只 A 股（沪市 60xxxx/68xxxx、深市 00xxxx/30xxxx），提供从原始行情采集、数据库持久化、技术指标计算到策略回测的完整流水线。
+Mephisto Quant 是一个面向中国 A 股市场的量化交易系统，覆盖约 5,000 只 A 股（沪市 60xxxx/68xxxx、深市 00xxxx/30xxxx），提供从原始行情采集、数据库持久化、技术指标计算、策略回测到绩效分析的完整流水线。
 
 ---
 
@@ -15,6 +15,7 @@ mephisto_quant/
 ├── update_dataset.sh              # 主流水线入口（串行调度）
 ├── update_database.sh             # CSV → MySQL 导入脚本
 ├── write_dataset.py               # 数据导入 Python 入口
+├── RESEARCH_PLAN.md               # 量化策略研究计划
 ├── core/
 │   ├── data/
 │   │   ├── collector.py           # 阶段一：行情数据下载器 (Baostock)
@@ -41,13 +42,23 @@ mephisto_quant/
 │   │   ├── datetime_utils.py      # 日期范围分块
 │   │   └── name_utils.py          # 6 位代码 → Baostock 格式转换
 │   ├── backtesting/
-│   │   ├── engine.py              # 回测引擎（逐 Bar 驱动）
-│   │   ├── strategy_base.py       # Strategy 基类 + Context 交易接口
-│   │   └── account.py             # 账户、持仓、T+1 交收
+│   │   ├── engine.py              # 回测引擎（逐 Bar 驱动，支持日线/30分钟）
+│   │   ├── strategy_base.py       # Strategy 基类 + Context 交易接口（含风控集成）
+│   │   ├── account.py             # 账户、持仓、T+1 交收（含交易日志）
+│   │   └── trade_log.py           # 交易记录数据类 TradeRecord + TradeLogger
+│   ├── analysis/
+│   │   ├── performance.py         # 绩效分析（16项指标：夏普/回撤/胜率等）
+│   │   └── report.py              # 格式化中文绩效报告
+│   ├── risk/
+│   │   └── risk_manager.py        # 风控规则（仓位/止损/止盈/回撤熔断/持股上限）
+│   ├── stock_selector/
+│   │   ├── selector.py            # 条件选股器（FilterCondition/CrossCondition）
+│   │   └── presets.py             # 预置选股策略（MACD金叉/KDJ超卖/布林下轨等）
 │   └── message/                   # 下载失败记录（JSON）
 ├── ddl/                           # 数据库建表 Shell 脚本
 └── examples/                      # 示例策略和回测演示
     ├── run_demo.py
+    ├── data/mock_data.csv
     └── strategies/demo_strategy.py
 ```
 
@@ -541,7 +552,11 @@ examples/run_demo.py
  ├── core/backtesting/engine.py
  │    ├── core/database/load_dataset.py
  │    ├── core/backtesting/account.py
+ │    │    └── core/backtesting/trade_log.py
  │    └── core/backtesting/strategy_base.py
+ │         └── core/risk/risk_manager.py (可选)
+ ├── core/analysis/performance.py
+ ├── core/stock_selector/selector.py
  └── examples/strategies/demo_strategy.py
 ```
 
@@ -573,3 +588,125 @@ examples/run_demo.py
 | 30 分钟聚合日线后复权 | 避免重复从 API 下载，复用已有 30 分钟后复权数据；turn 字段预留为 NULL |
 | T+1 交收 | 符合中国 A 股交易规则 |
 | 数据集目录独立于项目 | `/home/mephisto/dataset/quant/` 便于扩容和备份 |
+
+---
+
+## 交易日志（core/backtesting/trade_log.py）
+
+每笔成功的买入/卖出自动记录，无需策略代码干预。
+
+### TradeRecord 字段
+
+| 字段 | 说明 |
+|------|------|
+| `trade_id` | 自增编号 |
+| `timestamp` | 成交时的 Bar 时间戳 |
+| `date` | 交易日期 |
+| `code` | 股票代码 |
+| `direction` | `BUY` / `SELL` |
+| `price` / `volume` / `amount` | 成交价/量/额 |
+| `commission` | 佣金 |
+| `cash_before` / `cash_after` | 成交前后现金 |
+| `position_volume_after` | 成交后持仓量 |
+| `avg_cost_after` | 成交后持仓成本 |
+
+### 使用
+
+```python
+history_df, trades_df = engine.run()  # run() 返回 (净值, 交易记录) 元组
+```
+
+---
+
+## 绩效分析（core/analysis/）
+
+### PerformanceAnalyzer
+
+输入回测产出的 `equity_df` 和 `trades_df`，计算 16 项指标：
+
+| 类别 | 指标 |
+|------|------|
+| 收益 | total_return, annualized_return, daily_returns |
+| 风险 | max_drawdown, max_drawdown_duration, volatility |
+| 风险调整 | sharpe_ratio, sortino_ratio, calmar_ratio |
+| 交易统计 | total_trades, win_rate, profit_factor, avg_win, avg_loss, avg_holding_days, max_consecutive_wins/losses |
+
+```python
+from core.analysis.performance import PerformanceAnalyzer
+
+analyzer = PerformanceAnalyzer(equity_df, trades_df, initial_cash=100000.0,
+                                risk_free_rate=0.03, trading_days_per_year=242)
+analyzer.print_report()   # 格式化中文报告
+summary = analyzer.summary()  # 全部指标字典
+```
+
+A 股使用 242 个年交易日（非美股 252）。胜率通过 FIFO 配对 BUY/SELL 计算。
+
+---
+
+## 风控模块（core/risk/）
+
+风控作为中间件拦截在策略下单和账户执行之间：
+
+```
+Strategy.buy() → Context.buy() → RiskManager.check_order() → Account.buy()
+```
+
+### 5 个风控规则
+
+| 规则 | 说明 | 默认值 |
+|------|------|--------|
+| `PositionSizeRule` | 单票仓位上限 | 20% |
+| `StopLossRule` | 止损（按持仓成本） | 8% |
+| `TakeProfitRule` | 止盈（按持仓成本） | 20% |
+| `DrawdownLimitRule` | 组合回撤熔断（超限禁止买入） | 15% |
+| `MaxHoldingsRule` | 最大持仓股票数 | 10 |
+
+### 使用
+
+```python
+from core.risk.risk_manager import RiskManager, PositionSizeRule, StopLossRule
+
+rm = RiskManager()
+rm.add_rule(PositionSizeRule(max_position_pct=0.15))
+rm.add_rule(StopLossRule(stop_loss_pct=0.08))
+
+engine = BacktestEngine(strategy_cls=MyStrategy, codes=[...],
+                         start_date='20240101', end_date='20251231',
+                         risk_manager=rm)
+```
+
+- `risk_manager=None` 时行为与不加风控完全一致（向后兼容）
+- 规则 AND 组合：任一规则拒绝即拒绝
+- 调整后确保 100 股整数倍
+- `on_day_check()` 每日开盘前检查止损/止盈/熔断
+
+---
+
+## 选股模块（core/stock_selector/）
+
+### StockSelector
+
+基于技术指标的条件选股器，直接查询 MySQL 指标表。
+
+```python
+from core.stock_selector.selector import StockSelector, FilterCondition, CrossCondition
+
+selector = StockSelector(table_name='stock_indicators_1_day_hfq')
+selector.add_filter(FilterCondition('macd', '>', 0))
+selector.add_filter(FilterCondition('close', '>', 'ma20'))  # 字段间比较
+selector.add_cross_filter(CrossCondition('diff', 'dea', 'golden'))  # MACD 金叉
+
+codes = selector.select('2025-12-29')          # 返回股票代码列表
+df = selector.select_with_data('2025-12-29')   # 返回完整指标 DataFrame
+result = selector.select_range('2025-12-25', '2025-12-31')  # 批量：{date: [codes]}
+```
+
+### 预置选股策略（core/stock_selector/presets.py）
+
+| 函数 | 条件 |
+|------|------|
+| `macd_golden_cross()` | DIF 上穿 DEA 且 MACD > 0 |
+| `oversold_kdj()` | K < 20 且 J < 0 |
+| `bollinger_squeeze()` | close ≤ 布林下轨 |
+| `volume_breakout()` | close > MA20 且 close > MA5 |
