@@ -41542,5 +41542,45 @@
     "outDate": "",
     "type": "1",
     "status": "1"
+  },
+  "001257": {
+    "code": "sz.001257",
+    "code_name": "盛龙股份",
+    "ipoDate": "2026-03-31",
+    "outDate": "",
+    "type": "1",
+    "status": "1"
+  },
+  "301682": {
+    "code": "sz.301682",
+    "code_name": "宏明电子",
+    "ipoDate": "2026-03-25",
+    "outDate": "",
+    "type": "1",
+    "status": "1"
+  },
+  "301683": {
+    "code": "sz.301683",
+    "code_name": "慧谷新材",
+    "ipoDate": "2026-04-01",
+    "outDate": "",
+    "type": "1",
+    "status": "1"
+  },
+  "688781": {
+    "code": "sh.688781",
+    "code_name": "视涯科技",
+    "ipoDate": "2026-03-25",
+    "outDate": "",
+    "type": "1",
+    "status": "1"
+  },
+  "688813": {
+    "code": "sh.688813",
+    "code_name": "泰金新能",
+    "ipoDate": "2026-03-31",
+    "outDate": "",
+    "type": "1",
+    "status": "1"
   }
 }

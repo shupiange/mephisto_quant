@@ -1,4 +1,4 @@
-nohup.out
+*.out
 message/*
 *.pyc
 __pycache__/

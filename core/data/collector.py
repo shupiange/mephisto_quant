@@ -89,19 +89,17 @@ class DataCollector:
             pass
         return files
 
-    def fetch_data(self, start_date, end_date, code_list=None, request_interval=0.1):
+    def fetch_data(self, start_date, end_date, code_list=None, request_interval=0.1, is_fix=False):
         """
         获取指定代码列表在指定日期范围内的分钟线数据
         """
         # 确定要处理的代码列表
         target_codes = code_list if code_list is not None else self.stock_codes
-        
+
         all_minute_data = dict()
         newly_failed_codes = []
-        
-        desc = f"下载数据 ({start_date} ~ {end_date})"
-        if code_list is not None:
-            desc = f"修复代码 ({start_date} ~ {end_date})"
+
+        desc = f"修复代码 ({start_date} ~ {end_date})" if is_fix else f"下载数据 ({start_date} ~ {end_date})"
 
         for code in tqdm(target_codes, desc=desc):
             if is_stock_on_trade(self.stock_info, code, start_date, end_date):
@@ -209,7 +207,7 @@ class DataCollector:
 
                 print(f"--- 修复文件 {fname}(范围 {file_start} ~ {file_end}): 尝试重新获取 {len(codes)} 个代码 ---")
                 
-                newly_fetched_data, failed_list = self.fetch_data(file_start, file_end, code_list=codes, request_interval=0.3)
+                newly_fetched_data, failed_list = self.fetch_data(file_start, file_end, code_list=codes, request_interval=0.3, is_fix=True)
                 
                 self._update_failed_list(failed_list, file_start, file_end)
                 
@@ -237,7 +235,7 @@ if __name__ == "__main__":
     parser.add_argument('--end-date', type=str, required=True, help="结束日期 (YYYY-MM-DD)")
     parser.add_argument('--adjust-flag', type=str, default="2", help="1: hfq  2: qfq  3: 不复权")
     parser.add_argument('--frequency', type=str, default="5", help="30: 30min  d: day")
-    parser.add_argument('--fix', action='store_true', default=False, help="是否运行失败代码的修复模式")
+    parser.add_argument('--fix', type=bool, default=False, help="是否运行失败代码的修复模式")
     parser.add_argument('--path', type=str, default='', help="数据保存目录")
     parser.add_argument('--pre-adjust', type=bool, default=False, help="复权模式")
 
