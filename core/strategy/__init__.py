@@ -1,0 +1,1 @@
+from .trend_macd_daily import TrendMacdDailyStrategy

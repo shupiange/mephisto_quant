@@ -1,0 +1,33 @@
+{
+  "validation_sample_size": 50,
+  "universe_size": 5183,
+  "data_table": {
+    "table_name": "stock_data_1_day_hfq",
+    "rows": 24236,
+    "codes": 50,
+    "dates": 485,
+    "start_date": "2024-01-02",
+    "end_date": "2025-12-31"
+  },
+  "indicator_table": {
+    "table_name": "stock_indicators_1_day_hfq",
+    "rows": 24236,
+    "codes": 50,
+    "dates": 485,
+    "start_date": "2024-01-02",
+    "end_date": "2025-12-31"
+  },
+  "overlap_rows": 24236,
+  "missing_data_columns": [],
+  "missing_indicator_columns": [],
+  "data_null_ratio": {
+    "open": 0.0,
+    "close": 0.0,
+    "amount": 0.0
+  },
+  "indicator_null_ratio": {
+    "macd": 0.0,
+    "ma20": 0.0,
+    "ma60": 0.0
+  }
+}

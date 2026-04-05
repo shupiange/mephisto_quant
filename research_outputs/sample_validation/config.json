@@ -1,0 +1,23 @@
+{
+  "strategy_name": "trend_macd_daily",
+  "start_date": "20250101",
+  "end_date": "20250228",
+  "initial_cash": 100000.0,
+  "table_name": "stock_data_1_day_hfq",
+  "indicator_table": "stock_indicators_1_day_hfq",
+  "output_root": "research_outputs",
+  "run_name": "sample_validation",
+  "code_limit": null,
+  "validation_sample_size": 50,
+  "min_amount": 5000000.0,
+  "max_holdings": 10,
+  "position_pct": 0.15,
+  "stop_loss_pct": 0.08,
+  "take_profit_pct": 0.2,
+  "max_drawdown_pct": 0.15,
+  "liquidate_on_drawdown": false,
+  "start_date_display": "2025-01-01",
+  "end_date_display": "2025-02-28",
+  "effective_run_name": "sample_validation",
+  "output_dir": "/home/mephisto/projects/mephisto_quant/research_outputs/sample_validation"
+}

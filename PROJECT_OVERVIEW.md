@@ -15,7 +15,9 @@ mephisto_quant/
 ├── update_dataset.sh              # 主流水线入口（串行调度）
 ├── update_database.sh             # CSV → MySQL 导入脚本
 ├── write_dataset.py               # 数据导入 Python 入口
+├── run_research.py                # 统一研究入口
 ├── RESEARCH_PLAN.md               # 量化策略研究计划
+├── research_outputs/              # 研究输出目录（净值/交易/报告）
 ├── core/
 │   ├── data/
 │   │   ├── collector.py           # 阶段一：行情数据下载器 (Baostock)
@@ -49,11 +51,17 @@ mephisto_quant/
 │   ├── analysis/
 │   │   ├── performance.py         # 绩效分析（16项指标：夏普/回撤/胜率等）
 │   │   └── report.py              # 格式化中文绩效报告
+│   ├── research/
+│   │   ├── models.py              # 研究配置对象与输出目录规则
+│   │   ├── validation.py          # 回测前数据校验
+│   │   └── output.py              # 研究结果导出器
 │   ├── risk/
 │   │   └── risk_manager.py        # 风控规则（仓位/止损/止盈/回撤熔断/持股上限）
 │   ├── stock_selector/
 │   │   ├── selector.py            # 条件选股器（FilterCondition/CrossCondition）
 │   │   └── presets.py             # 预置选股策略（MACD金叉/KDJ超卖/布林下轨等）
+│   ├── strategy/
+│   │   └── trend_macd_daily.py    # 首个研究策略：趋势 + MACD 日线策略
 │   └── message/                   # 下载失败记录（JSON）
 ├── ddl/                           # 数据库建表 Shell 脚本
 └── examples/                      # 示例策略和回测演示
@@ -265,21 +273,26 @@ run()
 ```
 run()
   │
-  ├─ db_manager.connect()（全程复用单连接）
+  ├─ _get_db() → db_manager.connect()（单次建立，整轮任务复用）
   │
-  ├─ get_stock_codes() → SELECT DISTINCT code FROM source_table
+  ├─ get_all_stock_codes() → SELECT DISTINCT code FROM source_table
   │
-  ├─ 逐股票循环（tqdm 进度条）：
-  │     ├─ get_stock_data(code)
-  │     │     └─ 向前回溯 300 Bar 的预热缓冲（确保 MA90、EMA 收敛等精度）
-  │     ├─ calculate_indicators(df) → 向量化计算
-  │     └─ save_indicators(df, auto_commit=False)
-  │           └─ 过滤掉预热区数据（date >= start_date）
+  ├─ 按 stock_batch_size 分批循环：
+  │     ├─ load_stock_batch_data(codes)
+  │     │     └─ 向前回溯 300 天预热缓冲（确保 MA90、EMA 收敛等精度）
+  │     ├─ calculate_indicators_batch(df) → 按 code 分组向量化计算
+  │     └─ save_indicators_batch(df)
+  │           └─ 再按 batch_size 切片写入目标表
   │
-  ├─ 每 1,000 只股票 → conn.commit()（批量提交优化机械硬盘 I/O）
-  │
-  └─ 最终 commit + disconnect
+  └─ finally → close() → db_manager.disconnect()
 ```
+
+### 当前实现要点
+
+- 连接在 `run()` 开始时建立，`get_all_stock_codes()`、`load_stock_batch_data()`、`save_indicators_batch()` 全程复用同一个 `MySQLManager`
+- 因为不再在每个读取/写入函数中单独 connect/disconnect，整轮任务通常只会出现一次“连接成功”和一次“连接关闭”日志
+- 外层按股票批次加载，内层按写入批次落库，分别控制查询体积和单次 `REPLACE INTO` 规模
+- `start_date` 启用时会额外向前回溯 300 天，但最终仍只保留研究区间内结果
 
 ### 计算的技术指标
 
@@ -299,6 +312,43 @@ run()
 | 日线前复权 | `stock_indicators_1_day` | `(date, code)` |
 | 日线后复权 | `stock_indicators_1_day_hfq` | `(date, code)` |
 | 30分钟 | `stock_indicators_30_minute` | `(date, code, time)` |
+
+---
+
+## 策略研究入口（run_research.py）
+
+**入口**：`python3 run_research.py --strategy trend_macd_daily --start-date 2024-01-01 --end-date 2024-12-31`
+
+### 执行流程
+
+```
+build_parser()
+  └─ 解析策略名、日期区间、股票池、资金、风控、输出目录
+
+run_research(args)
+  ├─ STRATEGY_REGISTRY 校验策略名
+  ├─ ResearchConfig 归一化日期并生成本次 output_dir
+  ├─ resolve_codes() → 解析股票池 / code_limit
+  ├─ ResearchValidator.validate() → 先校验行情表与指标表覆盖率
+  ├─ BacktestEngine.run() → 执行回测
+  ├─ PerformanceAnalyzer.summary() → 生成绩效摘要
+  └─ ResearchArtifactExporter.export() → 落盘研究产物
+```
+
+### 首个策略：trend_macd_daily
+
+- 股票池过滤：`amount > 5000000` 且 `close > ma60`
+- 入场条件：`close > ma20`、`ma20 > ma60`、`macd > 0`、`diff > dea`
+- 出场条件：`close < ma10`、`macd < 0`、8% 止损、20% 止盈
+- 仓位约束：最大持仓 10 只，单票仓位 15%，按 100 股整数倍下单
+- 数据依赖：默认读取 `stock_data_1_day_hfq` 与 `stock_indicators_1_day_hfq`
+
+### 研究输出
+
+- 默认输出根目录：`research_outputs/`
+- 单次运行目录：`research_outputs/{strategy}_{start}_{end}_{timestamp}/`
+- 核心文件：`history.csv`、`trades.csv`、`summary.json`、`validation.json`
+- 报告文件：`config.json`、`report.txt`、`research_report.md`
 
 ---
 
@@ -558,6 +608,15 @@ examples/run_demo.py
  ├── core/analysis/performance.py
  ├── core/stock_selector/selector.py
  └── examples/strategies/demo_strategy.py
+
+研究:
+run_research.py
+ ├── core/research/{models, validation, output}.py
+ ├── core/strategy/trend_macd_daily.py
+ ├── core/backtesting/engine.py
+ ├── core/risk/risk_manager.py
+ ├── core/analysis/performance.py
+ └── research_outputs/{run_name}/
 ```
 
 ---
@@ -582,7 +641,8 @@ examples/run_demo.py
 | REPLACE INTO 代替 INSERT | 复权数据修正时需覆盖历史记录，确保幂等性 |
 | 15 天分块下载 | Baostock API 长连接易超时，分块保持连接活跃 |
 | 300 Bar 预热缓冲 | MA90 需要 90 根 K 线，EMA 收敛需要更长窗口 |
-| 每 1,000 股提交一次 | 批量提交减少磁盘随机写入，优化机械硬盘性能 |
+| Scholar 复用单条 MySQL 长连接 | 避免每个批次重复握手，减少连接成功/关闭日志噪音 |
+| Scholar 双层批处理 | 外层按股票批次查询，内层按行批次写入，兼顾查询体积与落库吞吐 |
 | 每 10,000 个 CSV 合并入库 | 控制内存峰值，避免单次加载全部文件 |
 | 日线前复权 + 30分钟后复权 | 日线前复权便于趋势分析；30 分钟后复权保留历史真实价格 |
 | 30 分钟聚合日线后复权 | 避免重复从 API 下载，复用已有 30 分钟后复权数据；turn 字段预留为 NULL |
