@@ -32,6 +32,17 @@ class ResearchConfig:
     position_pct: float = 0.15
     stop_loss_pct: float = 0.08
     take_profit_pct: float = 0.20
+    trail_stop_pct: float = 0.06
+    min_gain_to_trail_pct: float = 0.10
+    prior_strength_lookback: int = 20
+    min_prior_runup_pct: float = 0.15
+    pullback_from_high_min_pct: float = 0.03
+    pullback_from_high_max_pct: float = 0.18
+    ma20_proximity_pct: float = 0.03
+    rebound_volume_ratio: float = 1.05
+    short_strength_lookback: int = 10
+    min_short_return_pct: float = 0.03
+    top_rank_pct: float = 0.15
     max_drawdown_pct: float = 0.15
     liquidate_on_drawdown: bool = False
 

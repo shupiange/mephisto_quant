@@ -68,7 +68,17 @@ class ResearchArtifactExporter:
         lines.append(f"- 最大持仓数：{self.config.max_holdings}")
         lines.append(f"- 单票仓位上限：{self.config.position_pct:.2%}")
         lines.append(f"- 止损阈值：{self.config.stop_loss_pct:.2%}")
-        lines.append(f"- 止盈阈值：{self.config.take_profit_pct:.2%}")
+        if self.config.strategy_name in {'pullback_breakout_daily', 'relative_strength_pullback_daily'}:
+            lines.append(f"- 移动止盈回撤阈值：{self.config.trail_stop_pct:.2%}")
+            lines.append(f"- 启动移动止盈浮盈阈值：{self.config.min_gain_to_trail_pct:.2%}")
+            lines.append(f"- 回调前强势观察窗口：{self.config.prior_strength_lookback} 天")
+            lines.append(f"- 历史强势最小涨幅：{self.config.min_prior_runup_pct:.2%}")
+            if self.config.strategy_name == 'relative_strength_pullback_daily':
+                lines.append(f"- 短期强势观察窗口：{self.config.short_strength_lookback} 天")
+                lines.append(f"- 短期最小涨幅：{self.config.min_short_return_pct:.2%}")
+                lines.append(f"- 候选保留比例：{self.config.top_rank_pct:.2%}")
+        else:
+            lines.append(f"- 止盈阈值：{self.config.take_profit_pct:.2%}")
         lines.append(f"- 最大回撤限制：{self.config.max_drawdown_pct:.2%}")
         lines.append('')
         lines.append('## 数据校验')

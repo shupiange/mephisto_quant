@@ -61,7 +61,9 @@ mephisto_quant/
 │   │   ├── selector.py            # 条件选股器（FilterCondition/CrossCondition）
 │   │   └── presets.py             # 预置选股策略（MACD金叉/KDJ超卖/布林下轨等）
 │   ├── strategy/
-│   │   └── trend_macd_daily.py    # 首个研究策略：趋势 + MACD 日线策略
+│   │   ├── trend_macd_daily.py              # 第一版：趋势 + MACD 日线策略
+│   │   ├── pullback_breakout_daily.py       # 第二版：前强 + 回调 + 启动
+│   │   └── relative_strength_pullback_daily.py # 第三版：相对强势 + 回调 + 再启动
 │   └── message/                   # 下载失败记录（JSON）
 ├── ddl/                           # 数据库建表 Shell 脚本
 └── examples/                      # 示例策略和回测演示
@@ -317,7 +319,7 @@ run()
 
 ## 策略研究入口（run_research.py）
 
-**入口**：`python3 run_research.py --strategy trend_macd_daily --start-date 2024-01-01 --end-date 2024-12-31`
+**入口**：`python3 run_research.py --strategy relative_strength_pullback_daily --start-date 2024-01-01 --end-date 2024-12-31`
 
 ### 执行流程
 
@@ -335,13 +337,43 @@ run_research(args)
   └─ ResearchArtifactExporter.export() → 落盘研究产物
 ```
 
-### 首个策略：trend_macd_daily
+### 当前基准策略：relative_strength_pullback_daily（第三版）
 
-- 股票池过滤：`amount > 5000000` 且 `close > ma60`
-- 入场条件：`close > ma20`、`ma20 > ma60`、`macd > 0`、`diff > dea`
-- 出场条件：`close < ma10`、`macd < 0`、8% 止损、20% 止盈
-- 仓位约束：最大持仓 10 只，单票仓位 15%，按 100 股整数倍下单
-- 数据依赖：默认读取 `stock_data_1_day_hfq` 与 `stock_indicators_1_day_hfq`
+- **定位**：当前研究默认以第三版策略为准，前两版保留用于对照实验
+- **核心思想**：在全市场中先找“中期强 + 短期仍强”的相对强势股，再筛选“回调到 `ma20` 附近但趋势未坏、并且重新突破”的个股
+- **为什么叫相对强势**：当前项目还没有完整的行业/概念/板块映射数据，所以第三版先用**全市场横截面强弱排序**代理“强势板块里的强势股”
+- **股票池过滤**：
+  - `amount` 足够大，保证流动性
+  - `close > ma60`
+  - `ma20 > ma60`
+  - `macd > 0`
+- **前强判断**：在 `prior_strength_lookback` 窗口内，低点到高点至少出现一段显著涨幅
+- **短强判断**：在 `short_strength_lookback` 窗口内，首尾收益率仍为正，并达到最小短期涨幅要求
+- **回调判断**：
+  - 当前价格相对近期高点已有一定回落
+  - 回落不能过深
+  - 当前价格靠近 `ma20`
+  - 最近几天碰过 `ma20`
+- **启动确认**：
+  - `close > open`
+  - `close >= ma20`
+  - `diff > dea`
+  - 成交额不弱于近 5 日均值
+  - `close` 重新站上最近若干日高点
+- **卖出逻辑**：
+  - 固定止损：如亏损达到 7%
+  - 移动止盈：当浮盈达到阈值后，从持仓最高点回落达到阈值则卖出
+  - 趋势破坏退出：`close < ma10` 或 `diff < dea`
+- **仓位约束**：持仓数、单票仓位与 100 股整数倍买卖仍由研究入口和回测账户控制
+- **数据依赖**：默认读取 `stock_data_1_day_hfq` 与 `stock_indicators_1_day_hfq`
+
+### 三个版本策略的关系
+
+| 版本 | 策略名 | 主要特征 | 当前用途 |
+|------|--------|----------|----------|
+| 第一版 | `trend_macd_daily` | 趋势 + MACD | 最基础对照 |
+| 第二版 | `pullback_breakout_daily` | 前强 + 回调 + 启动 | 个股形态研究 |
+| 第三版 | `relative_strength_pullback_daily` | 相对强势 + 回调 + 启动 | 当前默认研究基准 |
 
 ### 研究输出
 
@@ -613,6 +645,8 @@ examples/run_demo.py
 run_research.py
  ├── core/research/{models, validation, output}.py
  ├── core/strategy/trend_macd_daily.py
+ ├── core/strategy/pullback_breakout_daily.py
+ ├── core/strategy/relative_strength_pullback_daily.py
  ├── core/backtesting/engine.py
  ├── core/risk/risk_manager.py
  ├── core/analysis/performance.py
@@ -646,6 +680,7 @@ run_research.py
 | 每 10,000 个 CSV 合并入库 | 控制内存峰值，避免单次加载全部文件 |
 | 日线前复权 + 30分钟后复权 | 日线前复权便于趋势分析；30 分钟后复权保留历史真实价格 |
 | 30 分钟聚合日线后复权 | 避免重复从 API 下载，复用已有 30 分钟后复权数据；turn 字段预留为 NULL |
+| 第三版策略使用“全市场相对强势”替代板块强度 | 当前未建立行业/概念/板块映射数据，先用横截面强弱排序代理强势板块筛选 |
 | T+1 交收 | 符合中国 A 股交易规则 |
 | 数据集目录独立于项目 | `/home/mephisto/dataset/quant/` 便于扩容和备份 |
 
